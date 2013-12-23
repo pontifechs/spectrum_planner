@@ -5,6 +5,10 @@ project(spectrum_planner)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
+# Load the cmake directory to submodule path
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+
+
 # go get glfw3 (instructions from glfw docs)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
@@ -20,18 +24,21 @@ include_directories(${GLEW_INCLUDE_DIRS})
 
 # go get FreeImage
 find_package(FreeImage REQUIRED)
+include_directories(${FREEIMAGE_INCLUDE_PATH})
 
 
 # Glob up the files
 file(GLOB MATH_FILES ${CMAKE_SOURCE_DIR}/src/math/*.*pp)
 file(GLOB SHADER_FILES ${CMAKE_SOURCE_DIR}/src/shaders/*.*pp)
-
+file(GLOB UTIL_FILES ${CMAKE_SOURCE_DIR}/src/util/*.*pp)
 
 # make the executable
-add_executable(spectrum_planner src/main.cpp ${MATH_FILES} ${SHADER_FILES})
+add_executable(spectrum_planner src/main.cpp ${MATH_FILES} 
+	                                           ${SHADER_FILES} 
+																						 ${UTIL_FILES})
 
 # link against glfw3, opengl
 target_link_libraries(spectrum_planner ${GLFW_STATIC_LIBRARIES})
 target_link_libraries(spectrum_planner ${OPENGL_LIBRARIES})
 target_link_libraries(spectrum_planner ${GLEW_LIBRARIES})
-
+target_link_libraries(spectrum_planner ${FREEIMAGE_LIBRARIES})

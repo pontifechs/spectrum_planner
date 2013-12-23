@@ -11,6 +11,8 @@
 
 #include <shaders/Shader.hpp>
 #include <shaders/Program.hpp>
+#include <util/Image.hpp>
+
 
 static void error_callback(int error, const char* description)
 {
@@ -22,12 +24,9 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
-
-
-int main(void)
+GLFWwindow* initGLFW()
 {
-	// Get GLFW started
-  GLFWwindow* window;
+	GLFWwindow* window;
 	glfwSetErrorCallback(error_callback);
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
@@ -41,6 +40,12 @@ int main(void)
 	glfwMakeContextCurrent(window);
 	glfwSetKeyCallback(window, key_callback);
 
+	return window;
+}
+
+void initGLEW()
+{
+
 	// Set up GLEW
 	GLenum err = glewInit();
 	if (err != GLEW_OK)
@@ -49,6 +54,15 @@ int main(void)
 		exit(1); // or handle the error in a nicer way
 	}
 
+}
+
+int main(void)
+{
+	// Initialize GLFW, GLEW
+  GLFWwindow* window = initGLFW();
+	initGLEW();
+	FreeImage_Initialise();
+
 	// Grab the shaders
 	Shader vert("../shaders/simple.vert", Shader::VERTEX);
 	Shader frag("../shaders/simple.frag", Shader::FRAGMENT);
@@ -56,41 +70,22 @@ int main(void)
 	simple.Build(vert,frag);
 	simple.Load();
 
-	// Load a texture
-	FREE_IMAGE_FORMAT formato = FreeImage_GetFileType(textureFile,0);//Automatocally detects the format(from over 20 formats!)
-	FIBITMAP* imagen = FreeImage_Load(formato, textureFile);
- 
-	FIBITMAP* temp = imagen;
-	imagen = FreeImage_ConvertTo32Bits(imagen);
-	FreeImage_Unload(temp);
- 
-	int w = FreeImage_GetWidth(imagen);
-	int h = FreeImage_GetHeight(imagen);
-	cout<<"The size of the image is: "<<textureFile<<" es "<<w<<"*"<<h<<endl; //Some debugging code
- 
-	GLubyte* textura = new GLubyte[4*w*h];
-	char* pixeles = (char*)FreeImage_GetBits(imagen);
-	//FreeImage loads in BGR format, so you need to swap some bytes(Or use GL_BGR).
- 
-	for(int j= 0; j<w*h; j++){
-		textura[j*4+0]= pixeles[j*4+2];
-		textura[j*4+1]= pixeles[j*4+1];
-		textura[j*4+2]= pixeles[j*4+0];
-		textura[j*4+3]= pixeles[j*4+3];
-		//cout<<j<<": "<<textura[j*4+0]<<"**"<<textura[j*4+1]<<"**"<<textura[j*4+2]<<"**"<<textura[j*4+3]<<endl;
-	}
- 
-	//Now generate the OpenGL texture object 
- 
-	glGenTextures(1, &amp;texturaID);
-	glBindTexture(GL_TEXTURE_2D, texturaID);
-	glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA, w, h, 0, GL_RGBA,GL_UNSIGNED_BYTE,(GLvoid*)textura );
+	Image nothing("../nothing-to-do-here.jpeg");
+	
+
+	//Now send the image to OpenGL in texture core 0
+	GLuint texId;
+	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, &texId);
+	glBindTexture(GL_TEXTURE_2D, texId);
+	glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA, nothing.width(), nothing.height(), 0, 
+							 GL_RGBA,GL_UNSIGNED_BYTE,(GLvoid*)nothing.get() );
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
  
 	GLenum huboError = glGetError();
 	if(huboError){
- 
-		cout<<"There was an error loading the texture"<<endl;
+		std::cout<<"There was an error loading the texture"<<std::endl;
 	}
  
 
@@ -99,10 +94,15 @@ int main(void)
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
 	{
-		float ratio;
-		int width, height;
-		glfwGetFramebufferSize(window, &width, &height);
-		ratio = width / (float) height;
+		// float ratio;
+		// int width, height;
+		// glfwGetFramebufferSize(window, &width, &height);
+		// ratio = width / (float) height;
+
+    glActiveTexture(GL_TEXTURE0);
+    int texture_location = glGetUniformLocation(simple.GetId(), "tex");
+    glUniform1i(texture_location, 0);
+    glBindTexture(GL_TEXTURE_2D, texId);
 
 		// Draw a single quad which everything else will be drawn on.
 		glBegin(GL_QUADS);
@@ -116,9 +116,15 @@ int main(void)
 		glfwPollEvents();
 	}
 
-	// Clean up
+
+
+	// Clean up glfw
 	glfwDestroyWindow(window);
 	glfwTerminate();
+
+	// clean up freeimage
+	FreeImage_DeInitialise();
+
 	exit(EXIT_SUCCESS);
 }
 
