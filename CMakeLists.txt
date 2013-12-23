@@ -1,0 +1,37 @@
+
+cmake_minimum_required(VERSION 2.8)
+
+project(spectrum_planner)
+
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
+# go get glfw3 (instructions from glfw docs)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(GLFW REQUIRED glfw3)
+include_directories(${GLFW_INCLUDE_DIRS})
+link_directories(${GLFW_LIBRARY_DIRS})
+
+# go get OpenGL
+find_package(OpenGL REQUIRED)
+
+# go get glew
+find_package(GLEW REQUIRED)
+include_directories(${GLEW_INCLUDE_DIRS})
+
+# go get FreeImage
+find_package(FreeImage REQUIRED)
+
+
+# Glob up the files
+file(GLOB MATH_FILES ${CMAKE_SOURCE_DIR}/src/math/*.*pp)
+file(GLOB SHADER_FILES ${CMAKE_SOURCE_DIR}/src/shaders/*.*pp)
+
+
+# make the executable
+add_executable(spectrum_planner src/main.cpp ${MATH_FILES} ${SHADER_FILES})
+
+# link against glfw3, opengl
+target_link_libraries(spectrum_planner ${GLFW_STATIC_LIBRARIES})
+target_link_libraries(spectrum_planner ${OPENGL_LIBRARIES})
+target_link_libraries(spectrum_planner ${GLEW_LIBRARIES})
+
