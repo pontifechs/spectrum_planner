@@ -62,6 +62,8 @@ void Shader::Initialize(std::string source_file, Shader::Type type)
     int act_leng = 0;
     glGetShaderInfoLog(m_id, 200, &act_leng, err_buf);
     printf("Shader Compilation failure in %s: %s\n", source_file.c_str(),  err_buf);
+		// For now, will replace with real exceptions at some point.
+		throw 0;
   }
   else
   {

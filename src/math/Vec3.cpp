@@ -1,9 +1,10 @@
 
 // Libs
-#include <math.h>
+#include <math.h> //sqrt
 
 // Classes
 #include "math/Vec3.hpp"
+
 
 
 // Equality Overloads
@@ -29,6 +30,11 @@ const Vec3 Vec3::operator*(float scalar) const
   return Vec3(*this) *= scalar;
 }
 
+const Vec3 Vec3::operator*(const Vec3& rhs) const
+{
+	return Vec3(*this) *= rhs;
+}
+
 
 Vec3& Vec3::operator-=(const Vec3& rhs)
 {
@@ -52,6 +58,14 @@ Vec3& Vec3::operator*=(float scalar)
   m_y *= scalar;
   m_z *= scalar;
   return *this;
+}
+
+Vec3& Vec3::operator*=(const Vec3& rhs)
+{
+	m_x *= rhs.m_x;
+	m_y *= rhs.m_y;
+	m_z *= rhs.m_z;
+	return *this;
 }
 
 // Getters

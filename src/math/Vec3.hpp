@@ -3,7 +3,7 @@
 
 
 class Vec3 {
-private:
+protected:
   float m_x;
   float m_y;
   float m_z;
@@ -16,19 +16,21 @@ public:
   void setX(float f);
   void setY(float f);
   void setZ(float f);
-  
+
   bool operator==(const Vec3& other) const;
   bool operator!=(const Vec3& other) const;
 
   const Vec3 operator-(const Vec3& rhs) const;
   const Vec3 operator+(const Vec3& rhs) const;
   const Vec3 operator*(float scalar) const;
-  
+	// Element-wise multiplication
+	const Vec3 operator*(const Vec3& rhs) const;
 
   
   Vec3& operator-=(const Vec3& rhs);
   Vec3& operator+=(const Vec3& rhs);
   Vec3& operator*=(float scalar);
+	Vec3& operator*=(const Vec3& rhs);
   
   
   Vec3(float _x, float _y, float _z);

@@ -26,6 +26,9 @@ include_directories(${GLEW_INCLUDE_DIRS})
 find_package(FreeImage REQUIRED)
 include_directories(${FREEIMAGE_INCLUDE_PATH})
 
+# point to the resource directory for textures, etc.
+add_definitions(-DRESOURCE_DIR="${CMAKE_SOURCE_DIR}/res")
+
 
 # Glob up the files
 file(GLOB MATH_FILES ${CMAKE_SOURCE_DIR}/src/math/*.*pp)

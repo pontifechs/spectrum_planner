@@ -1,12 +1,19 @@
 
 #include "util/Image.hpp"
 
+#include <iostream>
 
 Image::Image(std::string path)
 {
 	// Load a texture
 	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(path.c_str(),0);
 	FIBITMAP* image = FreeImage_Load(format, path.c_str());
+
+	if (image == NULL)
+	{
+		std::cout << "Error loading " << path << std::endl;
+	}
+
  
 	FIBITMAP* temp = image;
 	image = FreeImage_ConvertTo32Bits(image);
@@ -25,7 +32,6 @@ Image::Image(std::string path)
 		m_rawData[j*4+2]= pixels[j*4+0];
 		m_rawData[j*4+3]= pixels[j*4+3];
 	}
-	//FreeImage_Unload(pixels);
 }
 
 Image::~Image()

@@ -13,6 +13,13 @@
 #include <shaders/Program.hpp>
 #include <util/Image.hpp>
 
+#include <shaders/UVec2.hpp>
+#include <shaders/UFloat.hpp>
+#include <shaders/UMat3.hpp>
+#include <math/Transform.hpp>
+
+#include <cmath> //trig
+
 
 static void error_callback(int error, const char* description)
 {
@@ -58,51 +65,84 @@ void initGLEW()
 
 int main(void)
 {
+
+	// Get the resource directory from cmake.
+	#ifndef RESOURCE_DIR
+	#error No Resource directory specified from cmake. Check the top-level CMakeLists.txt
+	#endif
+
 	// Initialize GLFW, GLEW
   GLFWwindow* window = initGLFW();
 	initGLEW();
 	FreeImage_Initialise();
 
 	// Grab the shaders
-	Shader vert("../shaders/simple.vert", Shader::VERTEX);
-	Shader frag("../shaders/simple.frag", Shader::FRAGMENT);
+	Shader vert(std::string(RESOURCE_DIR) + "/shaders/simple.vert", Shader::VERTEX);
+	Shader frag(std::string(RESOURCE_DIR) + "/shaders/simple.frag", Shader::FRAGMENT);
 	Program simple;
 	simple.Build(vert,frag);
 	simple.Load();
 
-	Image nothing("../nothing-to-do-here.jpeg");
-	
+
+	//Image single_linear(std::string(RESOURCE_DIR) + "/tex/single-linear.jpg");
+	Image single_linear(std::string(RESOURCE_DIR) + "/tex/simplified-directional.jpg");
+
+	Vec2 resolution(640, 480);
+
+	Vec2 center1(0.75, 0.25);
+	float azimuth1 = -M_PI / 2.0;
+	UMat3 orientation1 = UMat3(simple, "orientation1", 
+														 Transform::RotateTranslate(-azimuth1, center1*resolution));
+
+	Vec2 center2(0.25, 0.75);
+	float azimuth2 = M_PI;
+	UMat3 orientation2 = UMat3(simple, "orientation2", 
+														 Transform::RotateTranslate(-azimuth2, center2*resolution));
+
+
+
 
 	//Now send the image to OpenGL in texture core 0
-	GLuint texId;
-	glActiveTexture(GL_TEXTURE0);
-	glGenTextures(1, &texId);
-	glBindTexture(GL_TEXTURE_2D, texId);
-	glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA, nothing.width(), nothing.height(), 0, 
-							 GL_RGBA,GL_UNSIGNED_BYTE,(GLvoid*)nothing.get() );
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	GLuint texId2;
+	glActiveTexture(GL_TEXTURE1);
+	glGenTextures(1, &texId2);
+	glBindTexture(GL_TEXTURE_1D, texId2);
+	glTexImage1D(GL_TEXTURE_1D,0,GL_RGBA, single_linear.width(), 0, 
+							 GL_RGBA,GL_UNSIGNED_BYTE,(GLvoid*)single_linear.get() );
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
- 
+
 	GLenum huboError = glGetError();
 	if(huboError){
 		std::cout<<"There was an error loading the texture"<<std::endl;
 	}
- 
+
+
+	// std::cout << atan2(0.0, 1.0) << std::endl;
+	// std::cout << atan2(1.0, 0.0) << std::endl;
+	// std::cout << atan2(0.0, -1.0) << std::endl;
+	// std::cout << atan2(-1.0, 0.0) << std::endl;
+
+
+	// exit(0);
 
 
 
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
 	{
-		// float ratio;
 		// int width, height;
 		// glfwGetFramebufferSize(window, &width, &height);
-		// ratio = width / (float) height;
 
-    glActiveTexture(GL_TEXTURE0);
-    int texture_location = glGetUniformLocation(simple.GetId(), "tex");
-    glUniform1i(texture_location, 0);
-    glBindTexture(GL_TEXTURE_2D, texId);
+		
+
+		int single_location = glGetUniformLocation(simple.GetId(), "oned");
+		glUniform1i(single_location, 1);
+		glBindTexture(GL_TEXTURE_1D, texId2);
+
+		
+		orientation1.send();
+		orientation2.send();
 
 		// Draw a single quad which everything else will be drawn on.
 		glBegin(GL_QUADS);

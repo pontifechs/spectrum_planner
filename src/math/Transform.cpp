@@ -1,13 +1,19 @@
 #include "math/Transform.hpp"
 
 #include "math/Mat4.hpp"
+#include "math/Mat3.hpp"
 #include "math/Vec3.hpp"
+#include "math/Vec2.hpp"
 
 
 #define _USE_MATH_DEFINES
 #include <math.h> // Trig functions
 
 #include <stdio.h>
+
+// -------------
+// 3D transforms
+// -------------
 
 Mat4 Transform::Translate(float x, float y, float z)
 {
@@ -110,3 +116,36 @@ Mat4 Transform::Projection(float fov, float aspect, float near, float far)
   return ret;
 }
 
+// -------------
+// 2D transforms
+// -------------
+
+Mat3 Transform::Rotate(float theta)
+{
+	Mat3 ret;
+	ret(0,0) = cos(theta);
+	ret(0,1) = -sin(theta);
+	ret(1,0) = sin(theta);
+	ret(1,1) = cos(theta);
+	return ret;
+}
+
+Mat3 Transform::Translate(Vec2 d)
+{
+	Mat3 ret;
+	ret(0,2) = d.x();
+	ret(1,2) = d.y();
+	return ret;
+}
+
+Mat3 Transform::RotateTranslate(float theta, Vec2 d)
+{
+	Mat3 ret;
+	ret(0,0) = cos(theta);
+	ret(0,1) = -sin(theta);
+	ret(1,0) = sin(theta);
+	ret(1,1) = cos(theta);
+	ret(0,2) = d.x();
+	ret(1,2) = d.y();
+	return ret;
+}
