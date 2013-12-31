@@ -19,7 +19,7 @@
 #include <math/Transform.hpp>
 
 #include <cmath> //trig
-
+#include <ctime> // FPS counting
 
 static void error_callback(int error, const char* description)
 {
@@ -46,6 +46,9 @@ GLFWwindow* initGLFW()
 
 	glfwMakeContextCurrent(window);
 	glfwSetKeyCallback(window, key_callback);
+
+	// Turn off vsync for fps calculations
+	glfwSwapInterval(0);
 
 	return window;
 }
@@ -85,7 +88,10 @@ int main(void)
 
 
 	//Image single_linear(std::string(RESOURCE_DIR) + "/tex/single-linear.jpg");
-	Image single_linear(std::string(RESOURCE_DIR) + "/tex/simplified-directional.jpg");
+	//Image single_linear(std::string(RESOURCE_DIR) + "/tex/simplified-directional.jpg");
+	Image single_linear(std::string(RESOURCE_DIR) + "/tex/test-float.png");
+
+//	Image nothing(std::string(RESOURCE_DIR) + "/tex/nothing-to-do-here.jpeg");
 
 	Vec2 resolution(640, 480);
 
@@ -101,40 +107,52 @@ int main(void)
 
 
 
+	// //Now send the image to OpenGL in texture core 0
+	// GLuint texId1;
+	// glActiveTexture(GL_TEXTURE0);
+	// glGenTextures(1, &texId1);
+	// glBindTexture(GL_TEXTURE_2D, texId1);
+	// glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA, nothing.width(), nothing.height(), 0, 
+	// 						 GL_RGBA,GL_UNSIGNED_BYTE,(GLvoid*)nothing.get() );
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
 
 	//Now send the image to OpenGL in texture core 0
 	GLuint texId2;
 	glActiveTexture(GL_TEXTURE1);
 	glGenTextures(1, &texId2);
 	glBindTexture(GL_TEXTURE_1D, texId2);
-	glTexImage1D(GL_TEXTURE_1D,0,GL_RGBA, single_linear.width(), 0, 
-							 GL_RGBA,GL_UNSIGNED_BYTE,(GLvoid*)single_linear.get() );
+	glTexImage1D(GL_TEXTURE_1D,0,GL_R32F, single_linear.width(), 0, 
+							 GL_RED,GL_FLOAT,(GLvoid*)single_linear.get() );
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 
 	GLenum huboError = glGetError();
 	if(huboError){
 		std::cout<<"There was an error loading the texture"<<std::endl;
+
+		const GLubyte *errString;
+
+    errString = gluErrorString(huboError);
+		fprintf (stderr, "OpenGL Error: %s\n", errString);
+	 
+		
 	}
 
 
-	// std::cout << atan2(0.0, 1.0) << std::endl;
-	// std::cout << atan2(1.0, 0.0) << std::endl;
-	// std::cout << atan2(0.0, -1.0) << std::endl;
-	// std::cout << atan2(-1.0, 0.0) << std::endl;
-
-
-	// exit(0);
-
-
-
+	time_t start_time = time(NULL);
+	unsigned int iterations = 0;
+	
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
 	{
 		// int width, height;
 		// glfwGetFramebufferSize(window, &width, &height);
 
-		
+		// int nothing_location = glGetUniformLocation(simple.GetId(), "nothing");
+		// glUniform1i(nothing_location, 0);
+		// glBindTexture(GL_TEXTURE_2D, texId1);
+
 
 		int single_location = glGetUniformLocation(simple.GetId(), "oned");
 		glUniform1i(single_location, 1);
@@ -154,6 +172,15 @@ int main(void)
 		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
+		iterations++;
+
+		time_t now = time(NULL);
+		if (now - start_time >= 5)
+		{
+			std::cout << iterations << std::endl;
+			exit(0);
+		}
 	}
 
 

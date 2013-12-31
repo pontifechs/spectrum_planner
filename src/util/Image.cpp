@@ -7,36 +7,34 @@ Image::Image(std::string path)
 {
 	// Load a texture
 	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(path.c_str(),0);
-	FIBITMAP* image = FreeImage_Load(format, path.c_str());
+	m_image = FreeImage_Load(format, path.c_str());
 
-	if (image == NULL)
+	if (m_image == NULL)
 	{
 		std::cout << "Error loading " << path << std::endl;
+		throw 0;
 	}
 
  
-	FIBITMAP* temp = image;
-	image = FreeImage_ConvertTo32Bits(image);
-	FreeImage_Unload(temp);
+	m_width = FreeImage_GetWidth(m_image);
+	m_height = FreeImage_GetHeight(m_image);
+	
+
+	// m_rawData = new GLubyte[4*m_width*m_height];
+	// char* pixels = (char*)FreeImage_GetBits(image);
+	// //FreeImage loads in BGR format, so you need to swap some bytes(Or use GL_BGR).
  
-	m_width = FreeImage_GetWidth(image);
-	m_height = FreeImage_GetHeight(image);
- 
-	m_rawData = new GLubyte[4*m_width*m_height];
-	char* pixels = (char*)FreeImage_GetBits(image);
-	//FreeImage loads in BGR format, so you need to swap some bytes(Or use GL_BGR).
- 
-	for(int j= 0; j<m_width*m_height; j++){
-		m_rawData[j*4+0]= pixels[j*4+2];
-		m_rawData[j*4+1]= pixels[j*4+1];
-		m_rawData[j*4+2]= pixels[j*4+0];
-		m_rawData[j*4+3]= pixels[j*4+3];
-	}
+	// for(int j= 0; j<m_width*m_height; j++){
+	// 	m_rawData[j*4+0]= pixels[j*4+2];
+	// 	m_rawData[j*4+1]= pixels[j*4+1];
+	// 	m_rawData[j*4+2]= pixels[j*4+0];
+	// 	m_rawData[j*4+3]= pixels[j*4+3];
+	// }
 }
 
 Image::~Image()
 {
-	delete[] m_rawData;
+	FreeImage_Unload(m_image);
 }
 
 FREE_IMAGE_FORMAT Image::format() const
@@ -44,9 +42,15 @@ FREE_IMAGE_FORMAT Image::format() const
 	return m_format;
 }
 
-const GLubyte* Image::get() const
+const void* Image::get() const
 {
-	return m_rawData;
+	return (void*)FreeImage_GetBits(m_image);
+}
+
+void Image::set(int x, int y, unsigned int value)
+{
+	unsigned int* row = (unsigned int*)FreeImage_GetScanLine(m_image, y);
+	row[x] = value;
 }
  
 int Image::width() const

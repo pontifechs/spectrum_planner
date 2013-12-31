@@ -42,9 +42,10 @@ vec4 power(mat3 orientation)
 	// 10.0 is from the dB conversion
 	// 50.0 is the length of each pixel (50m) 640x480 is 32km by 24km
 	// using log10
+
 	float powerDB =
 		txpower +
-		(gain * 70.0) -
+		(gain * 70.0);// -
 		(10.0 * alpha * log(50.0*length(centerToPoint)) / log(10.0));
 	// assume powerDB falls in the range -100, 100
 
@@ -61,15 +62,18 @@ void main()
 	
 	gl_FragColor = power(orientation1);
 	gl_FragColor += power(orientation2);
+	gl_FragColor += power(orientation1 * orientation2);
 
-	if (gl_FragColor.x <= 0.5)
-	{
-		gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-	}
+	/* if (gl_FragColor.x <= 0.5) */
+	/* { */
+	/* 	gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); */
+	/* } */
 
 	/* // Gain pattern overlay */
 	/* vec2 resolution = vec2(640.0, 480.0); */
 	/* vec2 uv = gl_FragCoord.xy / resolution.xy; */
+
+  /* //gl_FragColor = texture2D(nothing, uv); */
 
 	/* if (uv.y <= texture1D(oned, uv.x).x) */
 	/* { */
