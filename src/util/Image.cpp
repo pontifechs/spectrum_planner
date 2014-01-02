@@ -7,7 +7,7 @@ Image::Image(std::string path)
 {
 	// Load a texture
 	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(path.c_str(),0);
-	m_image = FreeImage_Load(format, path.c_str());
+	m_image = FreeImage_ConvertTo32Bits(FreeImage_Load(format, path.c_str()));
 
 	if (m_image == NULL)
 	{
