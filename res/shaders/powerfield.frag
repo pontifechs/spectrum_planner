@@ -2,7 +2,7 @@
 
 uniform vec2 resolution;
 
-uniform sampler1D oned;
+uniform sampler1D gain_map;
 uniform sampler2D global_alpha;
 
 uniform mat3 orientation1;
@@ -23,7 +23,7 @@ float angleToNDC(float theta)
 // Takes an angle in radians and returns the gain sampled at that point
 float gain(float angle)
 {
-	return texture1D(oned, angleToNDC(angle)).x;
+	return texture1D(gain_map, angleToNDC(angle)).x;
 }
 
 float alpha(vec2 screenSpace)
@@ -53,7 +53,6 @@ float LintodB(float lin)
 	return 10.0 * log10(lin);
 }
 
-
 float powerDB(mat3 orientation)
 {
 
@@ -63,7 +62,7 @@ float powerDB(mat3 orientation)
 
 	float theta = atan(centerToPointRot.y, centerToPointRot.x);
 	float gain = gain(theta);
-	float txpower = 0.0;
+	float txpower = 12.0;
 	float alpha = (texture2D(global_alpha, centerScreen / resolution).x * 255.0 / 10.0) + 2.0;
 
 	// gain between 0, 70 (set by gain pattern generator, only assumed here.)
@@ -109,23 +108,12 @@ void main()
 		gl_FragColor = vec4(0.0, sumPowerDBNDC, 0.0, 1.0);
 	}
 
-
-
-	// global alpha overlay
+	/* // Gain pattern overlay */
 	/* vec2 uv = gl_FragCoord.xy / resolution.xy; */
-	/* gl_FragColor += 0.3 * texture2D(global_alpha, uv); */
-
-
-
-/* 	// Gain pattern overlay */
-/* 	vec2 uv = gl_FragCoord.xy / resolution.xy; */
-
-/* //  gl_FragColor = texture2D(global_alpha, uv); */
-
-/* 	if (uv.y * 70.0 <= texture1D(oned, uv.x).x) */
-/* 	{ */
-/* 		gl_FragColor += vec4(0.2, 0.2, 0.2, 1.0); */
-/* 	} */
+	/* if (uv.y * 70.0 <= texture1D(gain_map, uv.x).x) */
+	/* { */
+	/* 	gl_FragColor += vec4(0.2, 0.2, 0.2, 1.0); */
+	/* } */
 
 
 	

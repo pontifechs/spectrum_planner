@@ -19,17 +19,19 @@ Image::Image(std::string path)
 	m_width = FreeImage_GetWidth(m_image);
 	m_height = FreeImage_GetHeight(m_image);
 	
-
-	// m_rawData = new GLubyte[4*m_width*m_height];
-	// char* pixels = (char*)FreeImage_GetBits(image);
 	// //FreeImage loads in BGR format, so you need to swap some bytes(Or use GL_BGR).
- 
-	// for(int j= 0; j<m_width*m_height; j++){
-	// 	m_rawData[j*4+0]= pixels[j*4+2];
-	// 	m_rawData[j*4+1]= pixels[j*4+1];
-	// 	m_rawData[j*4+2]= pixels[j*4+0];
-	// 	m_rawData[j*4+3]= pixels[j*4+3];
+	// for (int j = 0; j < m_height; ++j)
+	// {
+	// 	char* row = (char*) FreeImage_GetScanLine(m_image, j);
+
+	// 	for (int i = 0; i < m_width; ++i)
+	// 	{
+	// 		char tmp = row[i*4 + 0];
+	// 		row[i*4 + 0] = row[i*4 + 2];
+	// 		row[i*4 + 2] = tmp;
+	// 	}
 	// }
+
 }
 
 Image::~Image()

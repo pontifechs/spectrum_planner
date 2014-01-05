@@ -24,7 +24,7 @@ protected:
 	{
 		if (m_id == -1)
 		{
-			std::cout << "error getting uniform location for " << name;
+			std::cout << "error getting uniform location for " << name << std::endl;;
 		}
 	}
 
