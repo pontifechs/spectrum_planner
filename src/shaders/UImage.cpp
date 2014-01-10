@@ -8,7 +8,6 @@ UImage::UImage(const Program& program,
 			 const std::string path)
 	: IUniform(program, name), Image(path)
 {
-
 	m_tex_core = total_loaded;
 	glActiveTexture(GL_TEXTURE0 + m_tex_core);
 	glGenTextures(1, &m_tex_id);
@@ -37,10 +36,10 @@ UImage::UImage(const Program& program,
 
 	GLenum huboError = glGetError();
 	if(huboError){
+		std::cout << gluErrorString(huboError) << std::endl;
 		std::cout<<"There was an error loading the texture for "<< path << std::endl;
 	}
-
-			
+	
 	total_loaded++;
 }
 

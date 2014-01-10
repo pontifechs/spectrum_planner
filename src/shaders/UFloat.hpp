@@ -17,6 +17,21 @@ public :
 		: IUniform(program, name), val(0.0)
 		{}
 
+	// Assignment
+	UFloat& operator=(float rhs)
+		{
+			val = rhs;
+			return (*this);
+		}
+
+	// +=
+	UFloat& operator+=(float rhs) 
+		{
+			val += rhs;
+			return (*this);
+		}
+
+
 	virtual void send() const
 		{
 			glUniform1f(m_id, val);

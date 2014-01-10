@@ -194,18 +194,18 @@ Mat3 Mat3::operator* (const Mat3& rhs) const
 Vec3 Mat3::operator* (const Vec3& rhs) const
 {
   float x = 
-    (m_pData[0] * rhs.x()) + 
-    (m_pData[3] * rhs.y()) + 
-    (m_pData[6] * rhs.z());
+    (m_pData[0] * rhs.x) + 
+    (m_pData[3] * rhs.y) + 
+    (m_pData[6] * rhs.z);
   float y = 
-    (m_pData[1] * rhs.x()) + 
-    (m_pData[4] * rhs.y()) + 
-    (m_pData[7] * rhs.z());
+    (m_pData[1] * rhs.x) + 
+    (m_pData[4] * rhs.y) + 
+    (m_pData[7] * rhs.z);
 
   float z = 
-    (m_pData[2] * rhs.x()) + 
-    (m_pData[5] * rhs.y()) + 
-    (m_pData[8] * rhs.z());
+    (m_pData[2] * rhs.x) + 
+    (m_pData[5] * rhs.y) + 
+    (m_pData[8] * rhs.z);
   return Vec3(x, y, z);
 }
 

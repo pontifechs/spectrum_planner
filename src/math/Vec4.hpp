@@ -5,22 +5,11 @@ class Vec3;
 
 
 class Vec4 {
-private:
-  float m_x;
-  float m_y;
-  float m_z;
-  float m_w;
-  
 public:
-  float x() const;
-  float y() const;
-  float z() const;
-  float w() const;
-  
-  void setX(float f);
-  void setY(float f);
-  void setZ(float f);
-  void setW(float f);
+  float x;
+  float y;
+  float z;
+  float w;
   
   bool operator==(const Vec4& other) const;
   bool operator!=(const Vec4& other) const;

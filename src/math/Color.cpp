@@ -18,22 +18,22 @@ Color::Color(float _r, float _g, float _b, float _a)
 
 float Color::r() const
 {
-  return x();
+  return x;
 }
 
 float Color::g() const
 {
-  return y();
+  return y;
 }
 
 float Color::b() const
 {
-  return z();
+  return z;
 }
 
 float Color::a() const
 {
-  return w();
+  return w;
 }
 
 
@@ -87,16 +87,16 @@ Color Color::linearComboMulti(std::vector<Color> colors, std::vector<float> cont
 }
 
 void Color::setR(float _r) {
-  setX(clip(_r));
+  x = clip(_r);
 }
 void Color::setG(float _g) {
-  setY(clip(_g));
+	y = clip(_g);
 }
 void Color::setB(float _b) {
-  setZ(clip(_b));
+	z = clip(_b);
 }
 void Color::setA(float _a) {
-  setW(clip(_a));
+	w = clip(_a);
 }
 
 void Color::blendIn(Color newColor) {

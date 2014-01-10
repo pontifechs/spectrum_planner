@@ -1,8 +1,10 @@
+#version 410
+
 
 uniform vec2 resolution;
 uniform sampler2D logo;
 
-
+out vec4 FragColor;
 
 void main()
 {
@@ -12,12 +14,12 @@ void main()
 	}
 
 	vec2 uv = gl_FragCoord.xy / resolution.xy;
-	vec4 sample = texture2D(logo, uv);
+	vec4 texSample = texture(logo, uv);
 
-	if (sample.a <= 0.25)
+	if (texSample.a <= 0.25)
 	{
 		discard;
 	}
 
-	gl_FragColor = sample;
+	FragColor = texSample;
 }

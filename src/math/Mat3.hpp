@@ -55,7 +55,6 @@ public:
 
 
 protected:
-private:
   float* m_pData;        ///< The storage array
 
 };

@@ -5,6 +5,10 @@ project(spectrum_planner)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
+# set warning level
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall")
+
+
 # Load the cmake directory to submodule path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
@@ -29,16 +33,17 @@ include_directories(${FREEIMAGE_INCLUDE_PATH})
 # point to the resource directory for textures, etc.
 add_definitions(-DRESOURCE_DIR="${CMAKE_SOURCE_DIR}/res")
 
-
 # Glob up the files
+file(GLOB APP_FILES ${CMAKE_SOURCE_DIR}/src/*.*pp)
 file(GLOB MATH_FILES ${CMAKE_SOURCE_DIR}/src/math/*.*pp)
 file(GLOB SHADER_FILES ${CMAKE_SOURCE_DIR}/src/shaders/*.*pp)
 file(GLOB UTIL_FILES ${CMAKE_SOURCE_DIR}/src/util/*.*pp)
 
 # make the executable
-add_executable(spectrum_planner src/main.cpp ${MATH_FILES} 
-	                                           ${SHADER_FILES} 
-																						 ${UTIL_FILES})
+add_executable(spectrum_planner ${APP_FILES} 
+	${MATH_FILES} 
+	${SHADER_FILES} 
+	${UTIL_FILES})
 
 # link against glfw3, opengl
 target_link_libraries(spectrum_planner ${GLFW_STATIC_LIBRARIES})

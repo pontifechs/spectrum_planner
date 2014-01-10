@@ -4,8 +4,7 @@
 #include <math/Vec2.hpp>
 #include <shaders/IUniform.hpp>
 
-
-class UVec2 : public Vec2, public IUniform
+class UVec2 : public IUniform, public Vec2
 {
 public:
 	UVec2(const Program& program, const std::string name, float x, float y)
@@ -18,7 +17,7 @@ public:
 
 	virtual void send() const
 		{
-			glUniform2f(m_id, m_x, m_y);
+			glUniform2f(m_id, x, y);
 		}
 
 };

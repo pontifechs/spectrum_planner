@@ -42,7 +42,7 @@ void Program::Build(Shader vert, Shader frag)
   m_built = true;
 }
 
-void Program::Load()
+void Program::Load() const
 {
   glUseProgram(m_id);  
 }

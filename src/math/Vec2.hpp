@@ -3,16 +3,15 @@
 
 
 class Vec2 {
-protected:
-  float m_x;
-  float m_y;
-  
 public:
-  float x() const;
-  float y() const;
-  
-  void setX(float f);
-  void setY(float f);
+  float x;
+  float y;
+
+	float& ax();
+	float ax() const;
+
+	float& ay();
+	float ay() const;
 
   bool operator==(const Vec2& other) const;
   bool operator!=(const Vec2& other) const;

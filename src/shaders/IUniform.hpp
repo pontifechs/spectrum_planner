@@ -13,24 +13,34 @@ class IUniform
 {
 public:
 
+	void sendTo(const Program& program)
+		{
+			m_id = glGetUniformLocation(program.GetId(), m_name.c_str());
+			if (m_id == -1)
+			{
+				std::cout << "error getting uniform location for " << m_name << std::endl;
+			}
+			send();
+		}
+
 	virtual void send() const = 0;
+
+	virtual ~IUniform() {}
 
 protected:
 	
 	IUniform(const Program& program, const std::string name)
-		:m_program(program), 
-		 m_name(name), 
-		 m_id(glGetUniformLocation(program.GetId(), name.c_str()))
+		: m_name(name), 
+			m_id(glGetUniformLocation(program.GetId(), name.c_str()))
 	{
 		if (m_id == -1)
 		{
-			std::cout << "error getting uniform location for " << name << std::endl;;
+			std::cout << "error getting uniform location for " << m_name << std::endl;
 		}
 	}
 
-	const Program& m_program;
 	const std::string m_name;
-	const GLuint m_id;
+  GLint m_id;
 	
 
 };

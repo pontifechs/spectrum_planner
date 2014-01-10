@@ -10,7 +10,7 @@
 
 
 
-class UImage : public Image, public IUniform
+class UImage : public IUniform, public Image
 {
 public:
 

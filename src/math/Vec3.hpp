@@ -3,19 +3,11 @@
 
 
 class Vec3 {
-protected:
-  float m_x;
-  float m_y;
-  float m_z;
-  
 public:
-  float x() const;
-  float y() const;
-  float z() const;
-  
-  void setX(float f);
-  void setY(float f);
-  void setZ(float f);
+
+  float x;
+  float y;
+  float z;
 
   bool operator==(const Vec3& other) const;
   bool operator!=(const Vec3& other) const;

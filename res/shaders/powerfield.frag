@@ -1,3 +1,5 @@
+#version 410
+
 #define M_PI 3.1415926535897932384626433832795
 
 uniform vec2 resolution;
@@ -5,8 +7,17 @@ uniform vec2 resolution;
 uniform sampler1D gain_map;
 uniform sampler2D global_alpha;
 
-uniform mat3 orientation1;
-uniform mat3 orientation2;
+struct Antenna
+{
+	mat3 orientation;
+	float power;
+};
+
+uniform Antenna antenna;
+//uniform Antenna antenna2;
+
+out vec4 FragColor;
+
 
 bool floatEquals(float lhs, float rhs)
 {
@@ -19,23 +30,22 @@ float angleToNDC(float theta)
 	return (theta + M_PI) / (M_PI * 2.0);
 }
 
-
 // Takes an angle in radians and returns the gain sampled at that point
 float gain(float angle)
 {
-	return texture1D(gain_map, angleToNDC(angle)).x;
+	return texture(gain_map, angleToNDC(angle)).x;
 }
 
 float alpha(vec2 screenSpace)
 {
-	float alpha = (texture2D(global_alpha, screenSpace / resolution).x * 255.0 / 10.0) + 2.0;
+	float alphaSample = (texture(global_alpha, screenSpace / resolution).x * 255.0 / 10.0) + 2.0;
 
-	if (!(2.0 <= alpha && alpha <= 27.5))
+	if (!(2.0 <= alphaSample && alphaSample <= 27.5))
 	{
 		return -10000.0;
 	}
 
-	return alpha;
+	return alphaSample;
 }
 
 float log10(float val)
@@ -53,26 +63,26 @@ float LintodB(float lin)
 	return 10.0 * log10(lin);
 }
 
-float powerDB(mat3 orientation)
+float powerDB(Antenna ant)
 {
 
-	vec2 centerScreen = (orientation * vec3(0.0, 0.0, 1.0)).xy;
-	vec2 centerToPoint = gl_FragCoord.xy - centerScreen;
-	vec2 centerToPointRot = normalize((orientation * vec3(centerToPoint, 0.0)).xy);
+	vec2 pos_screen = (ant.orientation * vec3(0.0, 0.0, 1.0)).xy;
+	vec2 pos_to_point = gl_FragCoord.xy - pos_screen;
+	vec2 centerToPointRot = normalize((ant.orientation * vec3(pos_to_point, 0.0)).xy);
 
 	float theta = atan(centerToPointRot.y, centerToPointRot.x);
 	float gain = gain(theta);
 	float txpower = 12.0;
-	float alpha = (texture2D(global_alpha, centerScreen / resolution).x * 255.0 / 10.0) + 2.0;
+	float alpha = (texture(global_alpha, pos_screen / resolution).x * 255.0 / 10.0) + 2.0;
 
 	// gain between 0, 70 (set by gain pattern generator, only assumed here.)
 	// 10.0 is from the dB conversion
 	// 50.0 is the length of each pixel (50m) 640x480 is 32km by 24km
 	// using log10
 
-	float raySegmentLength = length(50.0 * centerToPoint / 25.0);
+	float raySegmentLength = length(50.0 * pos_to_point / 25.0);
 
-	float powerDB = txpower + gain - (10.0 * alpha * log10(raySegmentLength));
+	float powerDB = ant.power + gain - (10.0 * alpha * log10(raySegmentLength));
 
 	// March a ray through the global_alpha map to approximate non-constant alpha attenuation.
 	for (int i = 1; i < 25; ++i)
@@ -80,8 +90,8 @@ float powerDB(mat3 orientation)
 		// The intermediate position (current ray position)is defined as follows:
 		// centerScreen + t * centerToPoint
 		// where t goes from 0.0 to 1.0 in constant intervals
-		vec2 ray = centerScreen + (float(i) / 25.0 * centerToPoint);
-		float alpha = (texture2D(global_alpha, ray/resolution).x * 255.0/ 10.0)+ 2.0;
+		vec2 ray = pos_screen + (float(i) / 25.0 * pos_to_point);
+		float alpha = (texture(global_alpha, ray/resolution).x * 255.0/ 10.0)+ 2.0;
 
 		powerDB -= 10.0 * alpha * log10(float(i + 1) / float(i));
 	}
@@ -92,21 +102,30 @@ float powerDB(mat3 orientation)
 void main()
 {
 
-	float power1DB = powerDB(orientation1);
-	float power2DB = powerDB(orientation2);
-	float power = dBtoLin(power1DB) + dBtoLin(power2DB);
-	float sumPowerDB = LintodB(power);
-	float sumPowerDBNDC = (sumPowerDB + 100.0) / 200.0;
+	float power1DB = (powerDB(antenna) + 100.0) / 200.0;
+	///float power2DB = (powerDB(antenna2) + 100.0) / 200.0;
 
-	// Make positive dB red, negative dB green.
-	if (sumPowerDBNDC >= 0.5)
-	{
-		gl_FragColor = vec4(sumPowerDBNDC, 0.0, 0.0, 1.0);
-	}
-	else
-	{
-		gl_FragColor = vec4(0.0, sumPowerDBNDC, 0.0, 1.0);
-	}
+	FragColor = vec4(power1DB, power1DB, power1DB, 1.0);	
+
+	//FragColor[0] = vec4(power1DB, power1DB, power1DB, 1.0);
+	//FragColor[1] = vec4(power2DB, power2DB, power2DB, 1.0);
+
+	
+
+
+	/* float power = dBtoLin(power1DB) + dBtoLin(power2DB); */
+	/* float sumPowerDB = LintodB(power); */
+	/* float sumPowerDBNDC = (sumPowerDB + 100.0) / 200.0; */
+
+	/* // Make positive dB red, negative dB green. */
+	/* if (sumPowerDBNDC >= 0.5) */
+	/* { */
+	/* 	FragColor = vec4(sumPowerDBNDC, 0.0, 0.0, 1.0); */
+	/* } */
+	/* else */
+	/* { */
+	/* 	FragColor = vec4(0.0, sumPowerDBNDC, 0.0, 1.0); */
+	/* } */
 
 	/* // Gain pattern overlay */
 	/* vec2 uv = gl_FragCoord.xy / resolution.xy; */

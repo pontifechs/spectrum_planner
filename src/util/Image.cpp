@@ -14,11 +14,12 @@ Image::Image(std::string path)
 		std::cout << "Error loading " << path << std::endl;
 		throw 0;
 	}
-
  
 	m_width = FreeImage_GetWidth(m_image);
 	m_height = FreeImage_GetHeight(m_image);
-	
+
+	//  For now, I'm just using GL_BGR when going back and forth between OpenGL
+	//  and FreeImage
 	// //FreeImage loads in BGR format, so you need to swap some bytes(Or use GL_BGR).
 	// for (int j = 0; j < m_height; ++j)
 	// {
@@ -34,25 +35,24 @@ Image::Image(std::string path)
 
 }
 
+Image::Image(const char* rawPixels, int width, int height)
+	: m_width(width)
+	, m_height(height)
+{
+	// Always assume 32 bit images for now. Some day if I need fancy formats,
+	// I'll probably rewrite this entire class with templates/enums ,etc.
+	m_image = FreeImage_ConvertFromRawBits((BYTE*)rawPixels, width, height, width * 4, 32, 0, 0, 0);
+}
+
 Image::~Image()
 {
 	FreeImage_Unload(m_image);
 }
 
-FREE_IMAGE_FORMAT Image::format() const
-{
-	return m_format;
-}
 
 const void* Image::get() const
 {
 	return (void*)FreeImage_GetBits(m_image);
-}
-
-void Image::set(int x, int y, unsigned int value)
-{
-	unsigned int* row = (unsigned int*)FreeImage_GetScanLine(m_image, y);
-	row[x] = value;
 }
  
 int Image::width() const
@@ -63,4 +63,9 @@ int Image::width() const
 int Image::height() const
 {
 	return m_height;
+}
+
+bool Image::save(std::string path) const
+{
+	return FreeImage_Save(FIF_PNG, m_image, path.c_str(), 0);
 }

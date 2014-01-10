@@ -82,20 +82,20 @@ Mat4 Transform::View(Vec3 eye, Vec3 point, Vec3 upGiven)
   up.normalize();
 
   // First column
-  ret(0, 0) = right.x();
-  ret(1, 0) = up.x();
-  ret(2, 0) = -look.x();
+  ret(0, 0) = right.x;
+  ret(1, 0) = up.x;
+  ret(2, 0) = -look.x;
   // Second Column
-  ret(0, 1) = right.y();
-  ret(1, 1) = up.y();
-  ret(2, 1) = -look.y();
+  ret(0, 1) = right.y;
+  ret(1, 1) = up.y;
+  ret(2, 1) = -look.y;
   // Last Column
-  ret(0, 2) = right.z();
-  ret(1, 2) = up.z();
-  ret(2, 2) = -look.z();
+  ret(0, 2) = right.z;
+  ret(1, 2) = up.z;
+  ret(2, 2) = -look.z;
 
   // Translate to origin
-  Mat4 trans = Transform::Translate(-eye.x(), -eye.y(), -eye.z());
+  Mat4 trans = Transform::Translate(-eye.x, -eye.y, -eye.z);
 
   // Rotate then Translate
   return ret * trans;
@@ -133,8 +133,8 @@ Mat3 Transform::Rotate(float theta)
 Mat3 Transform::Translate(Vec2 d)
 {
 	Mat3 ret;
-	ret(0,2) = d.x();
-	ret(1,2) = d.y();
+	ret(0,2) = d.x;
+ 	ret(1,2) = d.y;
 	return ret;
 }
 
@@ -145,7 +145,7 @@ Mat3 Transform::RotateTranslate(float theta, Vec2 d)
 	ret(0,1) = -sin(theta);
 	ret(1,0) = sin(theta);
 	ret(1,1) = cos(theta);
-	ret(0,2) = d.x();
-	ret(1,2) = d.y();
+	ret(0,2) = d.x;
+	ret(1,2) = d.y;
 	return ret;
 }

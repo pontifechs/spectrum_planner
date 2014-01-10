@@ -7,7 +7,7 @@
 #include <math/Vec3.hpp>
 #include <shaders/IUniform.hpp>
 
-class UVec3 : public Vec3, public IUniform
+class UVec3 : public IUniform, public Vec3
 {
 public:
 	UVec3(const Program& program, const std::string name, float x, float y, float z)

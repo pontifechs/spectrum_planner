@@ -15,7 +15,7 @@ public:
 
   void Build(Shader vert, Shader frag);
 
-  void Load();
+  void Load() const;
 
   Shader GetShader(Shader::Type type) const;
   void SetShader(Shader::Type type, Shader shader);

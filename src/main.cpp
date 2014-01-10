@@ -2,7 +2,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
@@ -16,8 +15,11 @@
 #include <shaders/UFloat.hpp>
 #include <shaders/UMat3.hpp>
 #include <shaders/UImage.hpp>
+#include <shaders/AMesh.hpp>
 
 #include <math/Transform.hpp>
+
+#include <Antenna.hpp>
 
 #include <cmath> //trig
 #include <ctime> // crude FPS counting
@@ -38,6 +40,18 @@ GLFWwindow* initGLFW()
 	glfwSetErrorCallback(error_callback);
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
+
+	// Ask GLFW for a decent version of OpenGL :D
+	// 2.1 was the default, and it didn't have sampler2DArray,
+	// which from what I can tell is the only way to access TEXTURE_2D_ARRAY in GLSL.
+	// I'm not sure what the minimum version that I do need is though. But 4.1 is safe
+	// to assume for our laptops. Maybe not for more broad release, so something to
+	// look into before we do that.
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
 	window = glfwCreateWindow(640, 480, "Spectrum Planner", NULL, NULL);
 	if (!window)
 	{
@@ -57,12 +71,36 @@ GLFWwindow* initGLFW()
 void initGLEW()
 {
 	// Set up GLEW
+
+	// Apparently this is necessary black magic. Don't ask me.
+	glewExperimental = GL_TRUE;
+
 	GLenum err = glewInit();
 	if (err != GLEW_OK)
 	{
 		printf("Error during glew initialization\n");
 		exit(1);
 	}
+}
+
+AMesh setupQuad(const Program& prog)
+{
+	AMesh ret;
+
+	float* verts = new float[18];
+	verts[0] = -1.0; verts[1] = -1.0; verts[2] = 0.0; // bl
+	verts[3] = -1.0; verts[4] =  1.0; verts[5] = 0.0; // ul
+	verts[6] =  1.0; verts[7] =  1.0; verts[8] = 0.0; // ur
+
+	verts[9] = -1.0; verts[10] = -1.0; verts[11] = 0.0; // bl
+	verts[12] =  1.0; verts[13] = -1.0; verts[14] = 0.0; // br
+	verts[15] =  1.0; verts[16] =  1.0; verts[17] = 0.0; // ur
+
+	ret.attachAttribute(prog, "a_vertex", verts);
+
+	delete[] verts;
+	
+	return ret;
 }
 
 int main(void)
@@ -73,97 +111,139 @@ int main(void)
 	#endif
 	std::string res(RESOURCE_DIR);
  
-
-	// Initialize GLFW, GLEW
+	// Initialize GLFW, GLEW, FreeImage
   GLFWwindow* window = initGLFW();
 	initGLEW();
 	FreeImage_Initialise();
 
+	// Throw away any errors created by GLFW or GLEW.
+	glGetError();
+
 	// Grab the shaders
 	Shader passthroughVert(res + "/shaders/passthrough.vert", Shader::VERTEX);
 	Shader powerfieldFrag(res + "/shaders/powerfield.frag", Shader::FRAGMENT);
-	Shader logoFrag(res + "/shaders/logo.frag", Shader::FRAGMENT);
+	Shader summedNoiseFrag(res + "/shaders/summednoise.frag", Shader::FRAGMENT);
 
-	Program logoProg;
-	logoProg.Build(passthroughVert, logoFrag);
-	
 	Program powerfield;
 	powerfield.Build(passthroughVert,powerfieldFrag);
 	powerfield.Load();
 
+	Program summedNoise;
+	summedNoise.Build(passthroughVert, summedNoiseFrag);
+	summedNoise.Load();
 
+	// Setup FBO
+	GLuint fbo = 0;
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	GLuint core = UImage::total_loaded;
+	UImage::total_loaded++;
+	glActiveTexture(GL_TEXTURE0 + core);
+	glGenTextures(1, &Antenna::loss_array);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, Antenna::loss_array);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	GLint antennasLoc = glGetUniformLocation(summedNoise.GetId(), "antennas");
+	glUniform1i(antennasLoc, core);
+
+  // Set up a 50 layer 2D array 
+	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0,GL_RGB, 640, 480, 50, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+	// Attach layer 0 (the last 0) to color_attachment0 for rendering 
+	glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, Antenna::loss_array, 0, 0);
+	// Last param is the layer
+// Set the list of draw buffers.
+	GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+	glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers	
+	
+	
+	// check if everything is OK
+	GLenum e = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	switch (e) {	
+		case GL_FRAMEBUFFER_UNDEFINED:
+			printf("FBO Undefined\n");
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT :
+			printf("FBO Incomplete Attachment\n");
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT :
+			printf("FBO Missing Attachment\n");
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER :
+			printf("FBO Incomplete Draw Buffer\n");
+			break;
+		case GL_FRAMEBUFFER_UNSUPPORTED :
+			printf("FBO Unsupported\n");
+			break;
+		case GL_FRAMEBUFFER_COMPLETE:
+			printf("FBO OK\n");
+			break;
+		default:
+			printf("FBO Problem?\n");
+	}
+
+	AMesh pfQuad = setupQuad(powerfield);
+	AMesh snQuad = setupQuad(summedNoise);
+	
+	// Run the powerfield program
+	powerfield.Load();
 
 	// Powerfield Uniforms
 	UImage single_linear(powerfield, "gain_map", res + "/tex/simplified-directional-float.png");
 	UImage alpha_map(powerfield, "global_alpha", res + "/tex/global-alpha.jpg");
 
-
 	UVec2 resolution(powerfield, "resolution",640, 480);
 
+	Antenna antenna1(powerfield, "antenna");
+	antenna1.position = Vec2(0.75, 0.25) * resolution;
+	antenna1.azimuth = -M_PI;
+	antenna1.power = 12.0;
 
-	Vec2 center1(0.75, 0.25);
-	float azimuth1 = -M_PI;
-	UMat3 orientation1 = UMat3(powerfield, "orientation1", 
-														 Transform::RotateTranslate(-azimuth1, center1*resolution));
+	Antenna antenna2(powerfield, "antenna");
+	antenna2.position = Vec2(0.25, 0.75) * resolution;
+	antenna2.azimuth = 0.0;
+	antenna2.power = 12.0;
 
-	Vec2 center2(0.25, 0.75);
-	float azimuth2 = 0.0;
-	UMat3 orientation2 = UMat3(powerfield, "orientation2", 
-														 Transform::RotateTranslate(-azimuth2, center2*resolution));
+	Antenna antenna3(powerfield, "antenna");
+	antenna3.position = Vec2(0.75, 0.75) * resolution;
+	antenna3.azimuth = -3 * M_PI / 4;
+	antenna3.power = 12.0;
 
-	
-	// Logo uniforms
-	UImage logo(logoProg, "logo", res + "/tex/combined-logo.png");
-	UVec2 logo_resolution(logoProg, "resolution", logo.width(), logo.height());
+	single_linear.send();
+	alpha_map.send();
+
+	resolution.send();
+
+	antenna1.calculateLoss(pfQuad);
+	antenna2.calculateLoss(pfQuad);
+	antenna3.calculateLoss(pfQuad);
+
+	// Turn off the FBO 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	antenna1.saveImage("screen1.png");			
+	antenna2.saveImage("screen2.png");
+	antenna3.saveImage("screen3.png");
 
 
-
+	// Crude timing for rough FPS estimate
 	time_t start_time = time(NULL);
 	unsigned int iterations = 0;
-	
+
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
 	{
 		// Clear all buffers
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
 
-		// Run the powerfield program
+		summedNoise.Load();
 
-		powerfield.Load();
 
-		single_linear.send();
-		alpha_map.send();
-
-		resolution.send();
-		
-		orientation1.send();
-		orientation2.send();
-
-		// Draw a single quad which everything else will be drawn on.
-		glBegin(GL_QUADS);
-		glVertex3f(-1.0f, -1.0f, 1.0f);
-		glVertex3f( 1.0f, -1.0f, 1.0f);
-		glVertex3f( 1.0f,  1.0f, 1.0f);
-		glVertex3f(-1.0f,  1.0f, 1.0f);
-		glEnd();
-		
-
-		// Run the logo overlay program
-
-		logoProg.Load();
-		logo.send();
-		logo_resolution.send();
-		
-		glBegin(GL_QUADS);
-		glVertex3f(-1.0f, -1.0f, 1.0f);
-		glVertex3f( 1.0f, -1.0f, 1.0f);
-		glVertex3f( 1.0f,  1.0f, 1.0f);
-		glVertex3f(-1.0f,  1.0f, 1.0f);
-		glEnd();
-
+		snQuad.draw();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -181,8 +261,6 @@ int main(void)
 			start_time = now;
 		}
 	}
-
-
 
 	// Clean up glfw
 	glfwDestroyWindow(window);

@@ -216,28 +216,28 @@ Mat4 Mat4::operator* (const Mat4& rhs) const
 Vec4 Mat4::operator* (const Vec4& rhs) const
 {
   float x = 
-    (m_pData[0] * rhs.x()) + 
-    (m_pData[1] * rhs.y()) + 
-    (m_pData[2] * rhs.z()) + 
-    (m_pData[3] * rhs.w());
+    (m_pData[0] * rhs.x) + 
+    (m_pData[1] * rhs.y) + 
+    (m_pData[2] * rhs.z) + 
+    (m_pData[3] * rhs.w);
 
   float y = 
-    (m_pData[4] * rhs.x()) + 
-    (m_pData[5] * rhs.y()) + 
-    (m_pData[6] * rhs.z()) + 
-    (m_pData[7] * rhs.w());
+    (m_pData[4] * rhs.x) + 
+    (m_pData[5] * rhs.y) + 
+    (m_pData[6] * rhs.z) + 
+    (m_pData[7] * rhs.w);
 
   float z = 
-    (m_pData[8] * rhs.x()) + 
-    (m_pData[9] * rhs.y()) + 
-    (m_pData[10] * rhs.z()) + 
-    (m_pData[11] * rhs.w());
+    (m_pData[8] * rhs.x) + 
+    (m_pData[9] * rhs.y) + 
+    (m_pData[10] * rhs.z) + 
+    (m_pData[11] * rhs.w);
 
   float w = 
-    (m_pData[12] * rhs.x()) + 
-    (m_pData[13] * rhs.y()) + 
-    (m_pData[14] * rhs.z()) + 
-    (m_pData[15] * rhs.w());
+    (m_pData[12] * rhs.x) + 
+    (m_pData[13] * rhs.y) + 
+    (m_pData[14] * rhs.z) + 
+    (m_pData[15] * rhs.w);
 
   return Vec4(x, y, z, w);
 }
