@@ -16,6 +16,7 @@
 #include <shaders/UMat3.hpp>
 #include <shaders/UImage.hpp>
 #include <shaders/AMesh.hpp>
+#include <shaders/Framebuffer.hpp>
 
 #include <math/Transform.hpp>
 
@@ -127,60 +128,27 @@ int main(void)
 	Program powerfield;
 	powerfield.Build(passthroughVert,powerfieldFrag);
 	powerfield.Load();
-
+	
 	Program summedNoise;
 	summedNoise.Build(passthroughVert, summedNoiseFrag);
 	summedNoise.Load();
 
 	// Setup FBO
-	GLuint fbo = 0;
-	glGenFramebuffers(1, &fbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	Antenna::fbo.make();
 
 	GLuint core = UImage::total_loaded;
 	UImage::total_loaded++;
 	glActiveTexture(GL_TEXTURE0 + core);
 	glGenTextures(1, &Antenna::loss_array);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, Antenna::loss_array);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	
 	GLint antennasLoc = glGetUniformLocation(summedNoise.GetId(), "antennas");
 	glUniform1i(antennasLoc, core);
 
   // Set up a 50 layer 2D array 
 	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0,GL_RGB, 640, 480, 50, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
-
-	// Attach layer 0 (the last 0) to color_attachment0 for rendering 
-	glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, Antenna::loss_array, 0, 0);
-	// Last param is the layer
-// Set the list of draw buffers.
-	GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-	glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers	
-	
-	
-	// check if everything is OK
-	GLenum e = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	switch (e) {	
-		case GL_FRAMEBUFFER_UNDEFINED:
-			printf("FBO Undefined\n");
-			break;
-		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT :
-			printf("FBO Incomplete Attachment\n");
-			break;
-		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT :
-			printf("FBO Missing Attachment\n");
-			break;
-		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER :
-			printf("FBO Incomplete Draw Buffer\n");
-			break;
-		case GL_FRAMEBUFFER_UNSUPPORTED :
-			printf("FBO Unsupported\n");
-			break;
-		case GL_FRAMEBUFFER_COMPLETE:
-			printf("FBO OK\n");
-			break;
-		default:
-			printf("FBO Problem?\n");
-	}
 
 	AMesh pfQuad = setupQuad(powerfield);
 	AMesh snQuad = setupQuad(summedNoise);
@@ -218,13 +186,9 @@ int main(void)
 	antenna2.calculateLoss(pfQuad);
 	antenna3.calculateLoss(pfQuad);
 
-	// Turn off the FBO 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 	antenna1.saveImage("screen1.png");			
 	antenna2.saveImage("screen2.png");
 	antenna3.saveImage("screen3.png");
-
 
 	// Crude timing for rough FPS estimate
 	time_t start_time = time(NULL);
@@ -240,8 +204,8 @@ int main(void)
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
 
+        
 		summedNoise.Load();
-
 
 		snQuad.draw();
 

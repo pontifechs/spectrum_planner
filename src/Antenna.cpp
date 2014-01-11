@@ -19,11 +19,9 @@ Antenna::Antenna(const Program& program, std::string name)
 void Antenna::calculateLoss(AMesh screenQuad)
 {
 	// Bind the right layer of the loss textures to color attach 0 for rendering
-	glFramebufferTextureLayer(GL_FRAMEBUFFER, 
-														GL_COLOR_ATTACHMENT0, 
-														loss_array,
-														0,
-														m_layer);
+	fbo.load();
+	fbo.bindTextureLayer(loss_array, m_layer);
+
 	// Load the right program
 	m_program.Load();
 
@@ -32,18 +30,16 @@ void Antenna::calculateLoss(AMesh screenQuad)
 
 	// Draw the quad
 	screenQuad.draw();
-	
-	// Should now be updated.
+
+	fbo.unbindTextureLayer();
+	fbo.unload();
 }
 
 void Antenna::saveImage(std::string path)
 {
+	fbo.load();
 	// Bind the appropriate layer to color attach 0
-	glFramebufferTextureLayer(GL_FRAMEBUFFER, 
-														GL_COLOR_ATTACHMENT0, 
-														loss_array, 
-														0, 
-														m_layer);
+	fbo.bindTextureLayer(loss_array, m_layer);
 
 	// Read from color attach 0
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
@@ -56,6 +52,9 @@ void Antenna::saveImage(std::string path)
 
 	Image i(rawPixels, 640, 480);
 	i.save(path);
+	
+	fbo.unbindTextureLayer();
+	fbo.unload();
 
 	delete[] rawPixels;
 }
@@ -73,3 +72,4 @@ void Antenna::send()
 
 int Antenna::antenna_count = 0;
 GLuint Antenna::loss_array = 0;
+Framebuffer Antenna::fbo;

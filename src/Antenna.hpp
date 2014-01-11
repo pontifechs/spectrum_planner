@@ -8,6 +8,7 @@
 #include <shaders/UFloat.hpp>
 #include <shaders/UMat3.hpp>
 #include <shaders/AMesh.hpp>
+#include <shaders/Framebuffer.hpp>
 
 #include <GL/glew.h>
 
@@ -17,7 +18,8 @@ public:
 
 	static int antenna_count;
 	static GLuint loss_array; 
-	
+	static Framebuffer fbo;
+
 
 	Vec2 position;
 	float azimuth;
