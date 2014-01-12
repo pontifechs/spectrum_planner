@@ -1,4 +1,5 @@
 
+#include <algorithm>
 #include <sstream>
 
 #include <shaders/UImage.hpp>
@@ -17,6 +18,10 @@ UImageArray::UImageArray(const Program& prog, std::string name,
 	glActiveTexture(GL_TEXTURE0 + m_texCore);
 	glGenTextures(1, &m_textureId);
 
+	char* blank = new char[m_width * m_height * m_layers * 4];
+	std::fill_n(blank, m_width * m_height * m_layers * 4, 0);
+	
+
 	if (m_height != 1)
 	{
 
@@ -25,8 +30,7 @@ UImageArray::UImageArray(const Program& prog, std::string name,
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, m_width, m_height, m_layers, 0,
-								 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
+								 GL_RGBA, GL_UNSIGNED_BYTE, blank);
 	}
 	else
 	{
@@ -35,15 +39,14 @@ UImageArray::UImageArray(const Program& prog, std::string name,
 		glTexParameteri(GL_TEXTURE_1D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, GL_R32F, m_width, m_layers, 0,
-								 GL_RED, GL_FLOAT, NULL);
-
+								 GL_RED, GL_FLOAT, blank);
 	}
 
 	for (int i = 0; i < m_layers; ++i)
 	{
 		m_images.push_back(Image(m_width, m_height));
 	}
-		
+	delete[] blank;
 }
 
 void UImageArray::setLayer(Image img, int layer)
