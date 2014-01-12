@@ -4,17 +4,17 @@
 
 uniform vec2 resolution;
 
-uniform sampler1D gain_map;
+uniform sampler1DArray gain_patterns;
 uniform sampler2D global_alpha;
 
 struct Antenna
 {
 	mat3 orientation;
 	float power;
+	float gainPattern;
 };
 
 uniform Antenna antenna;
-//uniform Antenna antenna2;
 
 out vec4 FragColor;
 
@@ -33,7 +33,7 @@ float angleToNDC(float theta)
 // Takes an angle in radians and returns the gain sampled at that point
 float gain(float angle)
 {
-	return texture(gain_map, angleToNDC(angle)).x;
+	return texture(gain_patterns, vec2(angleToNDC(angle), antenna.gainPattern)).x;
 }
 
 float alpha(vec2 screenSpace)
@@ -51,16 +51,6 @@ float alpha(vec2 screenSpace)
 float log10(float val)
 {
 	return log2(val) / log2(10.0);
-}
-
-float dBtoLin(float dB)
-{
-	return pow(10.0, dB / 10.0);
-}
-
-float LintodB(float lin)
-{
-	return 10.0 * log10(lin);
 }
 
 float powerDB(Antenna ant)
@@ -102,38 +92,18 @@ float powerDB(Antenna ant)
 void main()
 {
 
+
 	float power1DB = (powerDB(antenna) + 100.0) / 200.0;
-	///float power2DB = (powerDB(antenna2) + 100.0) / 200.0;
+
 
 	FragColor = vec4(power1DB, power1DB, power1DB, 1.0);	
 
-	//FragColor[0] = vec4(power1DB, power1DB, power1DB, 1.0);
-	//FragColor[1] = vec4(power2DB, power2DB, power2DB, 1.0);
-
-	
-
-
-	/* float power = dBtoLin(power1DB) + dBtoLin(power2DB); */
-	/* float sumPowerDB = LintodB(power); */
-	/* float sumPowerDBNDC = (sumPowerDB + 100.0) / 200.0; */
-
-	/* // Make positive dB red, negative dB green. */
-	/* if (sumPowerDBNDC >= 0.5) */
-	/* { */
-	/* 	FragColor = vec4(sumPowerDBNDC, 0.0, 0.0, 1.0); */
-	/* } */
-	/* else */
-	/* { */
-	/* 	FragColor = vec4(0.0, sumPowerDBNDC, 0.0, 1.0); */
-	/* } */
-
 	/* // Gain pattern overlay */
 	/* vec2 uv = gl_FragCoord.xy / resolution.xy; */
-	/* if (uv.y * 70.0 <= texture1D(gain_map, uv.x).x) */
+	/* if (70.0 * uv.y <= texture(gain_patterns, vec2(uv.x, 1)).x) */
 	/* { */
-	/* 	gl_FragColor += vec4(0.2, 0.2, 0.2, 1.0); */
+	/* 	FragColor += vec4(0.2, 0.2, 0.2, 1.0); */
 	/* } */
-
 
 	
 }

@@ -10,8 +10,6 @@ public:
 	
 	Framebuffer();
 
-	void make();
-
 	void bindTextureLayer(GLuint texture, int layer);
 	void unbindTextureLayer();
 	

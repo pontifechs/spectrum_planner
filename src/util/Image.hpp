@@ -12,9 +12,19 @@ class Image
 {
 
 public:
+	Image();
 	Image(std::string path);
+	Image(int width, int height);
 	Image(const char* rawPixels, int width, int height);
+	
+	// destructor
 	~Image();
+	// Copy constructor
+	Image(const Image& original);
+	// Assignment operator
+	Image& operator= (const Image& rhs);
+
+
 
 	const void* get() const;
 

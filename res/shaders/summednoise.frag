@@ -34,11 +34,10 @@ void main(void)
 	float totalPower = 0.0;
 
 
-	for (int i = 0; i < 4; ++i)
+	for (int i = 0; i < 50; ++i)
 	{
 		float NDCDB = texture(antennas, vec3(uv, i)).r;
 		totalPower += dBtoLin((NDCDB * 200.0) - 100.0);
-
 	}
 	
 	float totalPowerDB = LintodB(totalPower);

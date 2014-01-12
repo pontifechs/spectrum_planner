@@ -4,10 +4,6 @@
 
 Framebuffer::Framebuffer()
 {
-}
-
-void Framebuffer::make()
-{
 	glGenFramebuffers(1, &m_fbo);
 	load();
 	GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
@@ -22,7 +18,7 @@ void Framebuffer::bindTextureLayer(GLuint texture, int layer)
 														GL_COLOR_ATTACHMENT0,
 														texture,
 														0,
-														layer);	
+														layer);
 	if (!wasLoaded)
 	{
 		unload();

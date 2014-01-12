@@ -7,11 +7,17 @@
 #include <util/Image.hpp>
 
 
-Antenna::Antenna(const Program& program, std::string name)
+Antenna::Antenna(const Program& program, std::string name, 
+								 Framebuffer& fbo, UImageArray& loss_array, UImageArray& gain_patterns)
 	: power(program, name + ".power")
+	, gainPattern(program, name + ".gainPattern")
 	, m_program(program)
 	, m_orientation(program, name + ".orientation")
 	, m_layer(antenna_count)
+	, m_fbo(fbo)
+	, m_loss_array(loss_array)
+	, m_gain_patterns(gain_patterns)
+		
 {
 	antenna_count++;
 }
@@ -19,8 +25,8 @@ Antenna::Antenna(const Program& program, std::string name)
 void Antenna::calculateLoss(AMesh screenQuad)
 {
 	// Bind the right layer of the loss textures to color attach 0 for rendering
-	fbo.load();
-	fbo.bindTextureLayer(loss_array, m_layer);
+	m_fbo.load();
+	m_fbo.bindTextureLayer(m_loss_array.getId(), m_layer);
 
 	// Load the right program
 	m_program.Load();
@@ -31,15 +37,15 @@ void Antenna::calculateLoss(AMesh screenQuad)
 	// Draw the quad
 	screenQuad.draw();
 
-	fbo.unbindTextureLayer();
-	fbo.unload();
+	m_fbo.unbindTextureLayer();
+	m_fbo.unload();
 }
 
 void Antenna::saveImage(std::string path)
 {
-	fbo.load();
+	m_fbo.load();
 	// Bind the appropriate layer to color attach 0
-	fbo.bindTextureLayer(loss_array, m_layer);
+	m_fbo.bindTextureLayer(m_loss_array.getId(), m_layer);
 
 	// Read from color attach 0
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
@@ -53,8 +59,8 @@ void Antenna::saveImage(std::string path)
 	Image i(rawPixels, 640, 480);
 	i.save(path);
 	
-	fbo.unbindTextureLayer();
-	fbo.unload();
+	m_fbo.unbindTextureLayer();
+	m_fbo.unload();
 
 	delete[] rawPixels;
 }
@@ -67,9 +73,11 @@ void Antenna::send()
 
 	// User changes the power value directly, so just send it along.
 	power.send();
+	gainPattern.send();
+
+	m_gain_patterns.send();
 }
 
 
 int Antenna::antenna_count = 0;
-GLuint Antenna::loss_array = 0;
-Framebuffer Antenna::fbo;
+

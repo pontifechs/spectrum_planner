@@ -3,6 +3,11 @@
 
 #include <iostream>
 
+Image::Image()
+{
+	m_image = FreeImage_Allocate(640, 480, 32);
+}
+
 Image::Image(std::string path)
 {
 	// Load a texture
@@ -35,6 +40,13 @@ Image::Image(std::string path)
 
 }
 
+Image::Image(int width, int height)
+	: m_width(width)
+	, m_height(height)
+{
+	m_image = FreeImage_Allocate(width, height, 32);
+}
+
 Image::Image(const char* rawPixels, int width, int height)
 	: m_width(width)
 	, m_height(height)
@@ -47,6 +59,23 @@ Image::Image(const char* rawPixels, int width, int height)
 Image::~Image()
 {
 	FreeImage_Unload(m_image);
+}
+
+Image::Image(const Image& original)
+	: m_width(original.m_width)
+	, m_height(original.m_height)
+{
+	m_image = FreeImage_Clone(original.m_image);
+}
+
+Image& Image::operator=(const Image& rhs)
+	
+{
+	FreeImage_Unload(m_image);
+	m_image = FreeImage_Clone(rhs.m_image);
+	m_width = rhs.m_width;
+	m_height = rhs.m_height;
+	return (*this);
 }
 
 

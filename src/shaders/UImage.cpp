@@ -36,7 +36,7 @@ UImage::UImage(const Program& program,
 
 	GLenum huboError = glGetError();
 	if(huboError){
-		std::cout << gluErrorString(huboError) << std::endl;
+		//std::cout << gluErrorString(huboError) << std::endl;
 		std::cout<<"There was an error loading the texture for "<< path << std::endl;
 	}
 	

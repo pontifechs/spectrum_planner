@@ -15,6 +15,7 @@
 #include <shaders/UFloat.hpp>
 #include <shaders/UMat3.hpp>
 #include <shaders/UImage.hpp>
+#include <shaders/UImageArray.hpp>
 #include <shaders/AMesh.hpp>
 #include <shaders/Framebuffer.hpp>
 
@@ -104,6 +105,7 @@ AMesh setupQuad(const Program& prog)
 	return ret;
 }
 
+
 int main(void)
 {
 	// Get the resource directory from cmake.
@@ -133,22 +135,9 @@ int main(void)
 	summedNoise.Build(passthroughVert, summedNoiseFrag);
 	summedNoise.Load();
 
-	// Setup FBO
-	Antenna::fbo.make();
-
-	GLuint core = UImage::total_loaded;
-	UImage::total_loaded++;
-	glActiveTexture(GL_TEXTURE0 + core);
-	glGenTextures(1, &Antenna::loss_array);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, Antenna::loss_array);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	
-	GLint antennasLoc = glGetUniformLocation(summedNoise.GetId(), "antennas");
-	glUniform1i(antennasLoc, core);
-
-  // Set up a 50 layer 2D array 
-	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0,GL_RGB, 640, 480, 50, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	// Set up FBO and Texture arrays
+	Framebuffer fbo;
+	UImageArray loss_array = UImageArray(summedNoise, "antennas", 640, 480, 50);
 
 	AMesh pfQuad = setupQuad(powerfield);
 	AMesh snQuad = setupQuad(summedNoise);
@@ -157,27 +146,36 @@ int main(void)
 	powerfield.Load();
 
 	// Powerfield Uniforms
-	UImage single_linear(powerfield, "gain_map", res + "/tex/simplified-directional-float.png");
+	Image single_linear(res + "/tex/simplified-directional-float.png");
+	Image sixty_degree(res + "/tex/60-degree.png");
+
+ 
+	UImageArray gain_patterns(powerfield, "gain_patterns", 512, 1, 2);
+	gain_patterns.setLayer(single_linear, 0);
+	gain_patterns.setLayer(sixty_degree, 1);
+
 	UImage alpha_map(powerfield, "global_alpha", res + "/tex/global-alpha.jpg");
 
 	UVec2 resolution(powerfield, "resolution",640, 480);
 
-	Antenna antenna1(powerfield, "antenna");
+	Antenna antenna1(powerfield, "antenna", fbo, loss_array, gain_patterns);
 	antenna1.position = Vec2(0.75, 0.25) * resolution;
 	antenna1.azimuth = -M_PI;
 	antenna1.power = 12.0;
+	antenna1.gainPattern = 0.0;
 
-	Antenna antenna2(powerfield, "antenna");
+	Antenna antenna2(powerfield, "antenna", fbo, loss_array, gain_patterns);
 	antenna2.position = Vec2(0.25, 0.75) * resolution;
 	antenna2.azimuth = 0.0;
 	antenna2.power = 12.0;
+	antenna2.gainPattern = 0.0;
 
-	Antenna antenna3(powerfield, "antenna");
+	Antenna antenna3(powerfield, "antenna", fbo, loss_array, gain_patterns);
 	antenna3.position = Vec2(0.75, 0.75) * resolution;
 	antenna3.azimuth = -3 * M_PI / 4;
-	antenna3.power = 12.0;
+	antenna3.power = 18.0;
+	antenna3.gainPattern = 1.0;
 
-	single_linear.send();
 	alpha_map.send();
 
 	resolution.send();
@@ -186,9 +184,7 @@ int main(void)
 	antenna2.calculateLoss(pfQuad);
 	antenna3.calculateLoss(pfQuad);
 
-	antenna1.saveImage("screen1.png");			
-	antenna2.saveImage("screen2.png");
-	antenna3.saveImage("screen3.png");
+	int global_time = 0.0;
 
 	// Crude timing for rough FPS estimate
 	time_t start_time = time(NULL);
@@ -197,14 +193,13 @@ int main(void)
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
 	{
-		// Clear all buffers
+		// Clear screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// // For giggles, have antenna 3 spin around
+		// antenna3.azimuth = global_time * 0.005;
+		// antenna3.calculateLoss(pfQuad);
 
-		int width, height;
-		glfwGetFramebufferSize(window, &width, &height);
-
-        
 		summedNoise.Load();
 
 		snQuad.draw();
@@ -213,6 +208,7 @@ int main(void)
 		glfwPollEvents();
 
 		iterations++;
+		global_time++;
 
 		time_t now = time(NULL);
 		if (now - start_time >= 5)
