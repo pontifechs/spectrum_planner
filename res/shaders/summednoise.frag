@@ -47,9 +47,13 @@ void main(void)
 	{
 		FragColor = vec4(totalPowerDBNDC, 0.0, 0.0, 1.0);
 	}
-	else
+	else if ((totalPowerDBNDC >= 0.3))
 	{
 		FragColor = vec4(0.0, totalPowerDBNDC, 0.0, 1.0);
+	}
+    else
+	{
+		FragColor = vec4(0.0, 0.0, totalPowerDBNDC, 1.0);
 	}
 
 }

@@ -25,15 +25,23 @@
 
 #include <cmath> //trig
 #include <ctime> // crude FPS counting
+#include <unistd.h> // for the sleep function
 
 static void error_callback(int error, const char* description)
 {
 	fputs(description, stderr);
 }
+
+bool stopTest = FALSE;
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
+    if (key==GLFW_KEY_LEFT){
+        stopTest= TRUE;}
+    if (key==GLFW_KEY_RIGHT) {
+        stopTest=FALSE;
+    }
 }
 
 GLFWwindow* initGLFW()
@@ -104,6 +112,7 @@ AMesh setupQuad(const Program& prog)
 	
 	return ret;
 }
+
 
 
 int main(void)
@@ -197,6 +206,7 @@ int main(void)
 	antenna4.saveImage("bob3.png");
 
 	int global_time = 0.0;
+    
 
 	// Crude timing for rough FPS estimate
 	time_t start_time = time(NULL);
@@ -205,12 +215,24 @@ int main(void)
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
 	{
+        //
+//        if (stopTest) {
+//            do {
+//                sleep(1);
+//                glfwPollEvents();
+//            } while (stopTest);
+//        }
+        while (stopTest) {
+            sleep(1);
+            glfwPollEvents();
+        }
+        
 		// Clear screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// // For giggles, have antenna 3 spin around
-		// antenna3.azimuth = global_time * 0.005;
-		// antenna3.calculateLoss(pfQuad);
+		antenna3.azimuth = global_time * 0.005;
+		antenna3.calculateLoss(pfQuad);
 
 		summedNoise.Load();
 
