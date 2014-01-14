@@ -173,8 +173,14 @@ int main(void)
 	Antenna antenna3(powerfield, "antenna", fbo, loss_array, gain_patterns);
 	antenna3.position = Vec2(0.75, 0.75) * resolution;
 	antenna3.azimuth = -3 * M_PI / 4;
-	antenna3.power = 18.0;
+	antenna3.power = 12.0;
 	antenna3.gainPattern = 1.0;
+	
+	Antenna antenna4(powerfield, "antenna", fbo, loss_array, gain_patterns);
+	antenna4.position = Vec2(0.5, 0.5) * resolution;
+	antenna4.azimuth = 3 * M_PI / 4;
+	antenna4.power = 12.0;
+	antenna4.gainPattern = 1.0;
 
 	alpha_map.send();
 
@@ -183,6 +189,12 @@ int main(void)
 	antenna1.calculateLoss(pfQuad);
 	antenna2.calculateLoss(pfQuad);
 	antenna3.calculateLoss(pfQuad);
+	antenna4.calculateLoss(pfQuad);
+
+	antenna1.saveImage("bob0.png");
+	antenna2.saveImage("bob1.png");
+	antenna3.saveImage("bob2.png");
+	antenna4.saveImage("bob3.png");
 
 	int global_time = 0.0;
 
