@@ -19,8 +19,9 @@ public:
 
 	GLuint m_tex_id;
 	int m_tex_core;
+    std::string uniformName;
 
-	UImage(const Program& program, 
+	UImage(const Program& program,
 				 const std::string name, 
 				 const std::string path);
 

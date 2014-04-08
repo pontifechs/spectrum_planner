@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <string>
+#include "math/Color.hpp"
 
 class UImageArray :  public IUniform
 {
@@ -22,10 +23,15 @@ public:
 	const Image& getLayer(Image img, int layer) const;
 
 	GLuint getId() const;
+    
+    RGBQUAD getPixelColorValues(unsigned int mWidth, unsigned int mHeight, int mLayer);
+    float  getPixelFloatValues(unsigned int mWidth, unsigned int mHeight, int mLayer);
 
-	void loadFromTextureCore();
+	void loadFromTextureCore_BGRA();
+    void loadFromTextureCore_32F();
 	void saveAll(std::string path);
-
+    GLuint getTexCoreID();
+    
 	virtual void send() const;
 
 	
@@ -35,10 +41,12 @@ private:
 
 	GLuint m_textureId;
 	GLuint m_texCore;
+    GLuint m_prog;          // new
 
 	int m_width;
 	int m_height;
 	int m_layers;
+    std::string fragName;   // new
 	std::vector<Image> m_images;
 	
 };

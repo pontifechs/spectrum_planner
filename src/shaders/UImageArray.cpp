@@ -12,16 +12,21 @@ UImageArray::UImageArray(const Program& prog, std::string name,
 	, m_width(width)
 	, m_height(height)
 	, m_layers(layers)
+    , fragName(name)
 {
-	// Increment and get the current next available tex core (still hacky)
+	m_prog = prog.GetId();  // test 18
+    std::cout << "UImageArray " << name << " " << m_prog << " " << glGetUniformLocation(prog.GetId(), name.c_str()) << std::endl;
+
+    // Increment and get the current next available tex core (still hacky)
 	m_texCore = UImage::total_loaded++;
-	glActiveTexture(GL_TEXTURE0 + m_texCore);
-	glGenTextures(1, &m_textureId);
+    std::cout << "uniformName " << fragName << " TexCore " << m_texCore << std::endl;
+	glActiveTexture(GL_TEXTURE0 + m_texCore);  // Activate the next texture core
+	glGenTextures(1, &m_textureId); // generate one texture name
 
 	char* blank = new char[m_width * m_height * m_layers * 4];
 	std::fill_n(blank, m_width * m_height * m_layers * 4, 0);
 	
-
+    
 	if (m_height != 1)
 	{
 
@@ -65,7 +70,7 @@ void UImageArray::setLayer(Image img, int layer)
 										1,
 										GL_BGRA,
 										GL_UNSIGNED_BYTE,
-										(GLvoid*)m_images[layer].get());	
+										(GLvoid*)m_images[layer].get());
 	}
 	else
 	{
@@ -79,11 +84,10 @@ void UImageArray::setLayer(Image img, int layer)
 										GL_RED,
 										GL_FLOAT,
 										(GLvoid*)m_images[layer].get());
-
 		GLenum huboError = glGetError();
 		if(huboError){
-			std::cout << gluErrorString(huboError) << std::endl;
-			//std::cout<<"There was an error loading the texture for "<< path << std::endl;
+//			std::cout << gluErrorString(huboError) << std::endl;
+			std::cout<<"There was an error loading the texture for "<< fragName << " " << huboError << std::endl;
 		}
 
 
@@ -100,7 +104,7 @@ GLuint UImageArray::getId() const
 	return m_textureId;
 }
 
-void UImageArray::loadFromTextureCore()
+void UImageArray::loadFromTextureCore_BGRA()  // test 25
 {
 	glBindTexture(GL_TEXTURE_2D_ARRAY, m_textureId);
 	
@@ -114,6 +118,48 @@ void UImageArray::loadFromTextureCore()
 	}
 	
 	delete[] rawPixels;
+}
+
+void UImageArray::loadFromTextureCore_32F()  // test 25
+{
+	glBindTexture(GL_TEXTURE_2D_ARRAY, m_textureId);  // test 25
+	
+	// 4 is number of single byte channels (4 for RGBA
+	char* rawPixels = new char[m_width * m_height * m_layers * 4];  // test 25
+	glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, GL_RED, GL_FLOAT, rawPixels);  // test 25
+    
+	for (int i = 0; i < m_layers; ++i)  // test 25
+	{
+		m_images[i] = Image(rawPixels + (m_width * m_height * 4 * i), m_width, m_height);  // test 25
+	}
+	
+	delete[] rawPixels;  // test 25
+}
+
+RGBQUAD UImageArray::getPixelColorValues(unsigned int mWidth, unsigned int mHeight, int mLayer)  // test 25
+{
+    RGBQUAD pixelColor={0,0,0,0};
+    Image myImage = m_images[mLayer];
+
+//    if (!FreeImage_GetPixelColor(myImage, mWidth, mHeight, pixelColor) {
+//        std::cout << "Failed to get Pixel Color from texture" << std::endl;
+//    };      // test 25
+
+    
+        return pixelColor;
+}
+
+float UImageArray::getPixelFloatValues(unsigned int mWidth, unsigned int mHeight, int mLayer) // test 25
+{
+    float pixelValue = 1.0;
+    Image myImage = m_images[mLayer];
+
+//    if (!FreeImage_GetPixelColor(myImage, mWidth, mHeight, pixelValue) {
+//        std::cout << "Failed to get Pixel Color from texture" << std::endl;
+//    };      // test 25
+
+            
+    return pixelValue;
 }
 
 void UImageArray::saveAll(std::string path)
@@ -130,4 +176,9 @@ void UImageArray::saveAll(std::string path)
 void UImageArray::send() const
 {
 	glUniform1i(m_id, m_texCore);
+}
+
+GLuint UImageArray::getTexCoreID()
+{
+    return m_texCore;
 }

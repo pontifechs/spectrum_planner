@@ -42,7 +42,7 @@ float alpha(vec2 screenSpace)
 
 	if (!(2.0 <= alphaSample && alphaSample <= 27.5))
 	{
-		return -10000.0;
+		return 6.0;
 	}
 
 	return alphaSample;
@@ -62,7 +62,7 @@ float powerDB(Antenna ant)
 
 	float theta = atan(centerToPointRot.y, centerToPointRot.x);
 	float gain = gain(theta);
-	float txpower = 12.0;
+	// float txpower = 12.0;
 	float alpha = (texture(global_alpha, pos_screen / resolution).x * 255.0 / 10.0) + 2.0;
 
 	// gain between 0, 70 (set by gain pattern generator, only assumed here.)
@@ -72,7 +72,8 @@ float powerDB(Antenna ant)
 
 	float raySegmentLength = length(50.0 * pos_to_point / 25.0);
 
-	float powerDB = ant.power + gain - (10.0 * alpha * log10(raySegmentLength));
+	// float powerDB = ant.power + gain - (10.0 * alpha * log10(raySegmentLength));
+    float powerDB = ant.power + gain;
 
 	// March a ray through the global_alpha map to approximate non-constant alpha attenuation.
 	for (int i = 1; i < 25; ++i)
