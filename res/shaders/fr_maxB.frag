@@ -1,17 +1,17 @@
-
 #version 410
 
 #define M_PI 3.1415926535897932384626433832795
 
 
-uniform sampler2DArray angles;              // test 22
+uniform sampler2DArray angles;              // angle offset array
 uniform sampler2DArray antennas;            // loss_array
+uniform sampler2DArray viewB;               // view b at layer 0
 
-uniform vec2 rcvr;                          // test 23
+uniform vec2 rcvr;
 // rcvr.x is thr azimuth angle
 // rcvr.y is the gain pattern index
 
-uniform sampler1DArray gain_patterns;       // test 17
+uniform sampler1DArray gain_patterns;
 
 out vec4 FragColor;
 
@@ -34,9 +34,9 @@ float LintodB(float lin)
 }
 
 // Takes an angle in 0-1 Units and returns the gain sampled at that point
-float gain(float angle, float layer)     // test 17
+float gain(float angle, float layer)
 {   // gain_patterns is -100..100 representing dB of gain
- 	return texture(gain_patterns, vec2(angle, layer)).x;  // test 17
+ 	return texture(gain_patterns, vec2(angle, layer)).x;
 }
 
 
@@ -71,18 +71,16 @@ void main(void)
     
     float totalPowerDB = LintodB(totalPower);
 	float totalPowerDBNDC = (totalPowerDB + 100.0) / 200.0;
+    float altView = texture(viewB, vec3(uv ,0)).x;
     
-	if (totalPowerDBNDC >= 0.5)
-	{
-		FragColor = vec4(totalPowerDBNDC, totalPowerDBNDC, totalPowerDBNDC, 1.0);
-	}
-	else if ((totalPowerDBNDC >= 0.45))
-	{
-		FragColor = vec4(totalPowerDBNDC, totalPowerDBNDC, 0.0, 1.0);
-	}
-    else
-	{
-		FragColor = vec4(0.0, 0.0, totalPowerDBNDC, 1.0);
-	}
- //   FragColor = vec4(totalPowerDBNDC, 0.0, 0.0, 1.0);
+    // take the highest value
+    float maxValue;
+    if (altView > totalPowerDBNDC) {
+        maxValue = altView;
+    }
+    else {
+        maxValue = totalPowerDBNDC;
+    }
+    
+    FragColor = vec4(maxValue, 0.0, 0.0, 1.0);
 }

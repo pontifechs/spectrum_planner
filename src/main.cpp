@@ -136,7 +136,10 @@ int main(void)
 	Shader passthroughVert(res + "/shaders/passthrough.vert", Shader::VERTEX);
 	Shader powerfieldFrag(res + "/shaders/powerfield.frag", Shader::FRAGMENT);
 	Shader summedNoiseFrag(res + "/shaders/summednoise.frag", Shader::FRAGMENT);
-    Shader offsetAnglesFrag(res + "/shaders/offsetAngles.frag", Shader::FRAGMENT); 
+    Shader offsetAnglesFrag(res + "/shaders/offsetAngles.frag", Shader::FRAGMENT);
+    Shader sh_viewAFrag(res + "/shaders/fr_maxA.frag", Shader::FRAGMENT);       // test 01
+    Shader sh_viewBFrag(res + "/shaders/fr_maxB.frag", Shader::FRAGMENT);       // test 01
+    Shader sh_viewMaxFrag(res + "/shaders/fr_viewMax.frag", Shader::FRAGMENT);  // test 01
 
 	Program powerfield;
 	powerfield.Build(passthroughVert,powerfieldFrag);
@@ -149,25 +152,56 @@ int main(void)
     // Added to create Receiver Angles
     Program offsetAngles;                                   
     offsetAngles.Build(passthroughVert, offsetAnglesFrag);  
-    offsetAngles.Load();                                    
+    offsetAngles.Load();
+    
+    Program pr_viewA;                               // test 01
+    pr_viewA.Build(passthroughVert, sh_viewAFrag);  // test 01
+    pr_viewA.Load();                                // test 01
+    
+    Program pr_viewB;                               // test 01
+    pr_viewB.Build(passthroughVert, sh_viewBFrag);  // test 01
+    pr_viewB.Load();                                // test 01
+    
+    Program pr_viewMax;                             // test 01
+    pr_viewMax.Build(passthroughVert, sh_viewMaxFrag); // test 01
+    pr_viewMax.Load();                              // test 01
     
 	// Set up FBO and Texture arrays
     Framebuffer fbo;
     UImageArray loss_array = UImageArray(summedNoise, "antennas", 640, 480, 8);
     UImageArray angleArray = UImageArray(summedNoise, "angles",   640, 480, 8);
+    UImageArray im_viewA = UImageArray(pr_viewA, "viewA", 640, 480, 1);     // test 01
+    UImageArray im_viewB = UImageArray(pr_viewB, "viewB", 640, 480, 1);     // test 01
+    
+    GLuint viewA_id = im_viewA.getId();
+    GLuint viewB_id = im_viewB.getId();
     
     summedNoise.Load();
-    loss_array.send();
-    angleArray.send();
+    loss_array.sendTo(summedNoise);
+    angleArray.sendTo(summedNoise);
 
+    pr_viewA.Load();                // test 01
+    im_viewB.sendTo(pr_viewA);      // test 01
+    loss_array.sendTo(pr_viewA);    // test 01
+    angleArray.sendTo(pr_viewA);    // test 01
+    
+    pr_viewB.Load();                // test 01
+    im_viewA.sendTo(pr_viewB);      // test 01
+    loss_array.sendTo(pr_viewB);    // test 01
+    angleArray.sendTo(pr_viewB);    // test 01
+    
+    pr_viewMax.Load();              // test 01
+    im_viewA.sendTo(pr_viewMax);    // test 01
+    
     // Meshes are needed to create vertex shader to the fragement shader
 	AMesh pfQuad = setupQuad(powerfield);
 	AMesh snQuad = setupQuad(summedNoise);
-    AMesh oaQuad = setupQuad(offsetAngles);         
+    AMesh oaQuad = setupQuad(offsetAngles);
+    AMesh maQuad = setupQuad(pr_viewA);         // test 01
+    AMesh mbQuad = setupQuad(pr_viewB);         // test 01
+    AMesh mvQuad = setupQuad(pr_viewMax);       // test 01
     
 	// Powerfield Uniforms
-//	Image single_linear(res + "/tex/simplified-directional-float.png");
-//	Image sixty_degree(res + "/tex/60-degree.png");
     Image omni(res + "/tex/antenna_omni.png");
     Image dir60_S(res + "/tex/antenna_60_simple.png");
     Image dir30_S(res + "/tex/antenna_30_simple.png");
@@ -179,27 +213,39 @@ int main(void)
     gain_patterns.setLayer(dir60_S, 1);     
     gain_patterns.setLayer(dir30_S, 2);
     gain_patterns.setLayer(dir05_S, 3);
-    gain_patterns.send();
+    
+    powerfield.Load();
+    gain_patterns.sendTo(powerfield);
     
     summedNoise.Load();
     gain_patterns.sendTo(summedNoise);
 
+
     powerfield.Load();
 	UImage alpha_map(powerfield, "global_alpha", res + "/tex/global-alpha.jpg");
-    alpha_map.send();
+    alpha_map.sendTo(powerfield);
 
 	UVec2 resolution(powerfield, "resolution", 640, 480);
-    resolution.send();
+    resolution.sendTo(powerfield);
     
     offsetAngles.Load();
     UVec2 mAntPosition(offsetAngles, "AntPosition", 0.5,0.5);           
-    mAntPosition.send();
+    mAntPosition.sendTo(offsetAngles);
     
     summedNoise.Load();
     float pointAngle=0.0, rcvrGainPattern = 1.0;
     UVec2 rcvrPointing(summedNoise, "rcvr", pointAngle, rcvrGainPattern);
-    rcvrPointing.send();                            
+    rcvrPointing.sendTo(summedNoise);
     
+    pr_viewA.Load();                    // test 01
+    gain_patterns.sendTo(pr_viewA);     // test 01
+    rcvrPointing.sendTo(pr_viewA);      // test 01
+    
+    pr_viewB.Load();                    // test 01
+    gain_patterns.sendTo(pr_viewB);     // test 01
+    rcvrPointing.sendTo(pr_viewB);      // test 01
+    
+    // establish a few antennas to work with
     std::vector<Vec2> positions(8);               
 
     Antenna antenna0(powerfield, "antenna", fbo, loss_array, gain_patterns);
@@ -281,7 +327,7 @@ int main(void)
         myPos = positions[mIndex];                  
         mAntPosition.x = myPos.x ;                  
         mAntPosition.y = myPos.y ;
-        mAntPosition.send();
+        mAntPosition.sendTo(offsetAngles);
         oaQuad.draw();                              
         fbo.unbindTextureLayer();                   
         glfwSwapBuffers(window);                    
@@ -303,6 +349,9 @@ int main(void)
 	// Crude timing for rough FPS estimate
 	time_t start_time = time(NULL);
 	unsigned int iterations = 0;
+    
+    // determine Whether to use summedNoise or the viewA/B cycle
+    int viewCase = 1;
     
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
@@ -334,17 +383,57 @@ int main(void)
 //        antenna7.azimuth = global_time * 0.005+M_PI/4;
 //		antenna7.calculateLoss(pfQuad);
         
-		summedNoise.Load();
         double fractPart, intPart;
         fractPart = modf(global_time*0.005, &intPart);
         rcvrPointing.x =fractPart;
-        rcvrPointing.send();
-
-		snQuad.draw();
         
-
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+        switch (viewCase) {
+            case 1:
+                // draw the B side (to get the A View)
+                pr_viewB.Load();
+                fbo.load();
+                fbo.bindTextureLayer(viewA_id, 0);
+                im_viewB.sendTo(pr_viewB);
+                rcvrPointing.sendTo(pr_viewB);
+                mbQuad.draw();
+                fbo.unbindTextureLayer();
+//                glfwSwapBuffers(window);
+//                glfwPollEvents();
+                fbo.unload();
+                std::cout << "Finished B side" << std::endl;
+                
+                // Output the result to the screen
+                pr_viewMax.Load();
+                im_viewA.sendTo(pr_viewMax);
+                mvQuad.draw();
+                glfwSwapBuffers(window);
+                glfwPollEvents();
+                std::cout << "Finished viewMax" << std::endl;
+                
+                // draw the A side (to get the B view)
+                pr_viewA.Load();
+                fbo.load();
+                fbo.bindTextureLayer(viewB_id, 0);
+                im_viewA.sendTo(pr_viewA);
+                rcvrPointing.sendTo(pr_viewA);
+                maQuad.draw();
+                fbo.unbindTextureLayer();
+//                glfwSwapBuffers(window);
+//                glfwPollEvents();
+                fbo.unload();
+                std::cout << "Finished A side" << std::endl;
+                break;
+                
+            default:
+                summedNoise.Load();
+                rcvrPointing.sendTo(summedNoise);
+                snQuad.draw();
+                glfwSwapBuffers(window);
+                glfwPollEvents();
+                break;
+        }
+        
+//		sleep(1);
 
 		iterations++;
 		global_time++;

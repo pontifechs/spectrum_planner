@@ -15,12 +15,12 @@ public:
 
 	void sendTo(const Program& program)
 		{
-            
 			m_id = glGetUniformLocation(program.GetId(), m_name.c_str());
 			if (m_id == -1)
 			{
 				std::cout << "IUniform sendTo error getting uniform location for " << m_name << std::endl;
 			}
+            //std::cout << "IUniform " << m_name << " to ProgramID " << m_id << std::endl;
 			send();
 		}
 
