@@ -98,3 +98,8 @@ bool Image::save(std::string path) const
 {
 	return FreeImage_Save(FIF_PNG, m_image, path.c_str(), 0);
 }
+
+FIBITMAP* Image::getImagePtr()
+{
+    return m_image;
+}

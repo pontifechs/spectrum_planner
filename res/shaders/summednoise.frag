@@ -56,28 +56,28 @@ void main(void)
 	vec2 uv = gl_FragCoord.xy / resolution.xy;
 
 	float totalPower = 0.0;
-
-	for (int i = 0; i < 8; ++i)
-	{
-        // antennas values range from 0..1, representing -100..100
-		float NDCDB = texture(antennas, vec3(uv, i)).r;           // test 17
-
+    int i = 0;
+//	for (int i = 0; i < 1; ++i)
+//	{
         // angles values range from 0..1, representing -Pi..Pi
-        float offsetAngle = texture(angles, vec3(uv, i)).r;       // test 23
+        float offsetAngle = texture(angles, vec3(uv, i)).r;
         
-        float testRcvr = rcvr.x/rcvr.y;                            // test 23
+    	// antennas values range from 0..1, representing -100..100
+        float NDCDB = texture(antennas, vec3(uv, i)).r;
+    
+        float testRcvr = rcvr.x/rcvr.y;
         
-        float testGain = texture(s_gain_patterns, vec2(0.5,0)).x;  // test 23
+        float testGain = texture(s_gain_patterns, vec2(rcvr.x,0.0)).x;
         
 //        NDCDB += offsetAngle/2000000.0 + testRcvr/2000000.0 + testGain/2000000.0;
         
         // rcvr.x is the pointing angle of the receiver
         // it is stored in units of Pi, i.e. 0 = -Pi, 1 = Pi
-//        offsetAngle = offsetAngle - rcvrPt.angle;                     // test 20
+//        offsetAngle = offsetAngle - rcvr.x;
 //        if (offsetAngle < 0)
 //            offsetAngle = 1 + offsetAngle;
 //        else if (offsetAngle > 1)
-//            offsetAngle = 1-offsetAngle;
+//            offsetAngle = 1 - offsetAngle;
         
         // gain_patterns stores antenna gain as a 32 bit values from -100 to 100
         // rcvrPt.y is the gain of the antenna
@@ -85,24 +85,25 @@ void main(void)
 //        float rcvrGain = rcvr.y;
 //        NDCDB +=rcvrGain;                                         // test 20
 //        NDCDB = rcvrGain/4096 + NDCDB + offsetAngle/4096 + rcvrPt.x/4096;      // test 21
-        totalPower += dBtoLin(((NDCDB )* 200.0) - 100.0);
-//        totalPower = dBtoLin((NDCDB * 200.0) - 100.0);      // test 21
-	}
+//        totalPower += dBtoLin(((NDCDB )* 200.0) - 100.0);
+//        totalPower = offsetAngle;      // test 2
+//  }
     
-    float totalPowerDB = LintodB(totalPower);
-	float totalPowerDBNDC = (totalPowerDB + 100.0) / 200.0;
+//    float totalPowerDB = LintodB(totalPower);
+//	float totalPowerDBNDC = (totalPowerDB + 100.0) / 200.0;
+//    float totalPowerDBNDC = totalPower;
     
-	if (totalPowerDBNDC >= 0.5)
-	{
-		FragColor = vec4(totalPowerDBNDC, 0.0, 0.0, 1.0);
-	}
-	else if ((totalPowerDBNDC >= 0.45))
-	{
-		FragColor = vec4(0.0, totalPowerDBNDC, 0.0, 1.0);
-	}
-    else
-	{
-		FragColor = vec4(0.0, 0.0, totalPowerDBNDC, 1.0);
-	}
-
+//	if (totalPowerDBNDC >= 0.5)
+//	{
+//		FragColor = vec4(totalPowerDBNDC, 0.0, 0.0, 1.0);
+//	}
+//	else if ((totalPowerDBNDC >= 0.45))
+//	{
+//		FragColor = vec4(0.0, totalPowerDBNDC, 0.0, 1.0);
+//	}
+//    else
+//	{
+//		FragColor = vec4(0.0, 0.0, totalPowerDBNDC, 1.0);
+//	}
+    FragColor = vec4(offsetAngle, 0.0, 0.0, 1.0);
 }

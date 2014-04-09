@@ -32,7 +32,7 @@ public:
 	int height() const;
 
 	bool save(std::string path) const;
-    
+    FIBITMAP* getImagePtr();
 
 protected:
 private:

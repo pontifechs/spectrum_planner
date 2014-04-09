@@ -141,24 +141,29 @@ RGBQUAD UImageArray::getPixelColorValues(unsigned int mWidth, unsigned int mHeig
     RGBQUAD pixelColor={0,0,0,0};
     Image myImage = m_images[mLayer];
 
-//    if (!FreeImage_GetPixelColor(myImage, mWidth, mHeight, pixelColor) {
-//        std::cout << "Failed to get Pixel Color from texture" << std::endl;
-//    };      // test 25
+    if (!FreeImage_GetPixelColor(myImage.getImagePtr(), mWidth, mHeight, &pixelColor) )
+    {
+        std::cout << "Failed to get Pixel Color from texture" << std::endl;
+    };      // test 25
 
     
         return pixelColor;
 }
 
-float UImageArray::getPixelFloatValues(unsigned int mWidth, unsigned int mHeight, int mLayer) // test 25
+float  UImageArray::getPixelFloatValues(unsigned int mWidth, unsigned int mHeight, int mLayer)
 {
-    float pixelValue = 1.0;
+    float pixelValue;
+    
+    RGBQUAD pixelColor={0,0,0,0};
     Image myImage = m_images[mLayer];
-
-//    if (!FreeImage_GetPixelColor(myImage, mWidth, mHeight, pixelValue) {
-//        std::cout << "Failed to get Pixel Color from texture" << std::endl;
-//    };      // test 25
-
-            
+    
+    if (!FreeImage_GetPixelColor(myImage.getImagePtr(), mWidth, mHeight, &pixelColor) )
+    {
+        std::cout << "Failed to get Pixel Color from texture" << std::endl;
+    };      // test 25
+    
+    pixelValue = 1.0;  // replace this with something to convert 4 bytes to a float
+    
     return pixelValue;
 }
 

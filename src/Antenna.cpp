@@ -26,7 +26,7 @@ void Antenna::calculateLoss(AMesh screenQuad)
 {
 	// Bind the right layer of the loss textures to color attach 0 for rendering
 	m_fbo.load();
-    glActiveTexture(GL_TEXTURE0 + m_loss_array.getTexCoreID()); // test 26
+
 	m_fbo.bindTextureLayer(m_loss_array.getId(), m_layer);
 
 	// Load the right program
