@@ -153,16 +153,18 @@ int main(void)
     
 	// Set up FBO and Texture arrays
     Framebuffer fbo;
-    UImageArray angleArray = UImageArray(summedNoise, "angles",   640, 480, 8);
     UImageArray loss_array = UImageArray(summedNoise, "antennas", 640, 480, 8);
+    UImageArray angleArray = UImageArray(summedNoise, "angles",   640, 480, 8);
+    
+    summedNoise.Load();
+    loss_array.send();
+    angleArray.send();
 
+    // Meshes are needed to create vertex shader to the fragement shader
 	AMesh pfQuad = setupQuad(powerfield);
 	AMesh snQuad = setupQuad(summedNoise);
     AMesh oaQuad = setupQuad(offsetAngles);         
     
-	// Run the powerfield program
-	powerfield.Load();
-
 	// Powerfield Uniforms
 //	Image single_linear(res + "/tex/simplified-directional-float.png");
 //	Image sixty_degree(res + "/tex/60-degree.png");
@@ -177,15 +179,10 @@ int main(void)
     gain_patterns.setLayer(dir60_S, 1);     
     gain_patterns.setLayer(dir30_S, 2);
     gain_patterns.setLayer(dir05_S, 3);
+    gain_patterns.send();
     
-    // Create and send the gain atterns for the summedNoise fragment shader
     summedNoise.Load();
-    UImageArray gain_Rcvr(summedNoise, "s_gain_patterns", 512, 1, 4); 
-    gain_Rcvr.setLayer(omni, 0);
-    gain_Rcvr.setLayer(dir60_S, 1);
-    gain_Rcvr.setLayer(dir30_S, 2);
-    gain_Rcvr.setLayer(dir05_S, 3);
-    gain_Rcvr.send();
+    gain_patterns.sendTo(summedNoise);
 
     powerfield.Load();
 	UImage alpha_map(powerfield, "global_alpha", res + "/tex/global-alpha.jpg");
@@ -199,8 +196,8 @@ int main(void)
     mAntPosition.send();
     
     summedNoise.Load();
-    float pointAngle=0.0, rcvrGain = 6;                                 
-    UVec2 rcvrPointing(summedNoise, "rcvr", pointAngle, rcvrGain);    
+    float pointAngle=0.0, rcvrGainPattern = 1.0;
+    UVec2 rcvrPointing(summedNoise, "rcvr", pointAngle, rcvrGainPattern);
     rcvrPointing.send();                            
     
     std::vector<Vec2> positions(8);               
@@ -301,10 +298,6 @@ int main(void)
 	antenna6.saveImage("Ant06.png");
 	antenna7.saveImage("Ant07.png");
 
-    summedNoise.Load();
-    angleArray.send();
-    loss_array.send();
-    
 	int global_time = 0.0;
 
 	// Crude timing for rough FPS estimate
@@ -340,8 +333,6 @@ int main(void)
 //		antenna6.calculateLoss(pfQuad);
 //        antenna7.azimuth = global_time * 0.005+M_PI/4;
 //		antenna7.calculateLoss(pfQuad);
-        
-
         
 		summedNoise.Load();
         double fractPart, intPart;

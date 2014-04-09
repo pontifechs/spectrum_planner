@@ -15,6 +15,7 @@ public:
 
 	void sendTo(const Program& program)
 		{
+            
 			m_id = glGetUniformLocation(program.GetId(), m_name.c_str());
 			if (m_id == -1)
 			{
