@@ -222,7 +222,8 @@ int main(void)
 
 		// This is the old transfer function, (blue ch., red/green ch., all ch.)
 		// UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_gray_transfer.png", false);
-		UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_red_transfer.png", false);
+		// UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_red_transfer.png", false);
+		UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_dark_red_transfer.png", false);
     transfer.sendTo(summedNoise);
 
  
