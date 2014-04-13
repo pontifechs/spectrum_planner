@@ -220,10 +220,17 @@ int main(void)
     summedNoise.Load();
     gain_patterns.sendTo(summedNoise);
 
+		// This is the old transfer function, (blue ch., red/green ch., all ch.)
+		// UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_gray_transfer.png", false);
+		UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_red_transfer.png", false);
+    transfer.sendTo(summedNoise);
 
+ 
     powerfield.Load();
-	UImage alpha_map(powerfield, "global_alpha", res + "/tex/global-alpha.jpg");
+		UImage alpha_map(powerfield, "global_alpha", res + "/tex/global-alpha.jpg", false);
     alpha_map.sendTo(powerfield);
+
+
 
 	UVec2 resolution(powerfield, "resolution", 640, 480);
     resolution.sendTo(powerfield);
@@ -351,7 +358,7 @@ int main(void)
 	unsigned int iterations = 0;
     
     // determine Whether to use summedNoise or the viewA/B cycle
-    int viewCase = 1;
+    int viewCase = 0;
     
 	// Draw loop
 	while (!glfwWindowShouldClose(window))

@@ -23,7 +23,8 @@ public:
 
 	UImage(const Program& program,
 				 const std::string name, 
-				 const std::string path);
+				 const std::string path,
+		     bool floatingPoint = true);
 
 	virtual void send() const;
 };

@@ -6,6 +6,7 @@
 
 uniform sampler2DArray angles;              // test 22
 uniform sampler2DArray antennas;            // loss_array
+uniform sampler1D transfer;
 
 uniform vec2 rcvr;                          // test 23
 // rcvr.x is thr azimuth angle
@@ -72,17 +73,20 @@ void main(void)
     float totalPowerDB = LintodB(totalPower);
 	float totalPowerDBNDC = (totalPowerDB + 100.0) / 200.0;
     
-	if (totalPowerDBNDC >= 0.5)
-	{
-		FragColor = vec4(totalPowerDBNDC, totalPowerDBNDC, totalPowerDBNDC, 1.0);
-	}
-	else if ((totalPowerDBNDC >= 0.45))
-	{
-		FragColor = vec4(totalPowerDBNDC, totalPowerDBNDC, 0.0, 1.0);
-	}
-    else
-	{
-		FragColor = vec4(0.0, 0.0, totalPowerDBNDC, 1.0);
-	}
- //   FragColor = vec4(totalPowerDBNDC, 0.0, 0.0, 1.0);
+	/* if (totalPowerDBNDC >= 0.5) */
+	/* { */
+	/* 	FragColor = vec4(totalPowerDBNDC, totalPowerDBNDC, totalPowerDBNDC, 1.0); */
+	/* } */
+	/* else if ((totalPowerDBNDC >= 0.45)) */
+	/* { */
+	/* 	FragColor = vec4(totalPowerDBNDC, totalPowerDBNDC, 0.0, 1.0); */
+	/* } */
+  /*   else */
+	/* { */
+	/* 	FragColor = vec4(0.0, 0.0, totalPowerDBNDC, 1.0); */
+	/* } */
+	FragColor = texture(transfer, totalPowerDBNDC);
+
+
+
 }
