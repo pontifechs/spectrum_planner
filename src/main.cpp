@@ -225,6 +225,7 @@ int main(void)
 		// UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_red_transfer.png", false);
 		UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_dark_red_transfer.png", false);
     transfer.sendTo(summedNoise);
+    transfer.sendTo(pr_viewMax);
 
  
     powerfield.Load();
@@ -237,11 +238,11 @@ int main(void)
     resolution.sendTo(powerfield);
     
     offsetAngles.Load();
-    UVec2 mAntPosition(offsetAngles, "AntPosition", 0.5,0.5);           
+    UVec2 mAntPosition(offsetAngles, "AntPosition", 0.5,0.0);
     mAntPosition.sendTo(offsetAngles);
     
     summedNoise.Load();
-    float pointAngle=0.0, rcvrGainPattern = 1.0;
+    float pointAngle=0.5, rcvrGainPattern = 1.0;
     UVec2 rcvrPointing(summedNoise, "rcvr", pointAngle, rcvrGainPattern);
     rcvrPointing.sendTo(summedNoise);
     
@@ -257,71 +258,71 @@ int main(void)
     std::vector<Vec2> positions(8);               
 
     Antenna antenna0(powerfield, "antenna", fbo, loss_array, gain_patterns);
-	antenna0.position = Vec2(0.49375, 0.3583) * resolution;
-	antenna0.azimuth = M_PI/6.0;
-	antenna0.power = 8.0;
+	antenna0.position = Vec2(0.25, 0.3583) * resolution;
+	antenna0.azimuth = M_PI / 2.0;
+	antenna0.power = 3.0;
 	antenna0.gainPattern = 0.0;
-    positions[0] = antenna0.position;              
+    positions[0] = antenna0.position;
 	
     Antenna antenna1(powerfield, "antenna", fbo, loss_array, gain_patterns);
 	antenna1.position = Vec2(0.821875, 0.65) * resolution;
-	antenna1.azimuth = M_PI/6.0;
-	antenna1.power = 7.0;
+	antenna1.azimuth = -9.0 * M_PI / 16.0;
+	antenna1.power = 15.0;
 	antenna1.gainPattern = 1.0;
     positions[1] = antenna1.position;              
 
 	Antenna antenna2(powerfield, "antenna", fbo, loss_array, gain_patterns);
 	antenna2.position = Vec2(0.7125, 0.79583) * resolution;
-	antenna2.azimuth = M_PI/6.0;
-	antenna2.power = 8.0;
-	antenna2.gainPattern = 2.0;
+	antenna2.azimuth = - M_PI;
+	antenna2.power = 15.0;
+	antenna2.gainPattern = 1.0;
     positions[2] = antenna2.position;              
 
 	Antenna antenna3(powerfield, "antenna", fbo, loss_array, gain_patterns);
-	antenna3.position = Vec2(0.603125, 0.65) * resolution;
-	antenna3.azimuth = M_PI/6.0;
+	antenna3.position = Vec2(0.49375, 0.3583) * resolution;
+	antenna3.azimuth = - M_PI/2.0;
 	antenna3.power = 8.0;
-	antenna3.gainPattern = 3.0;
+	antenna3.gainPattern = 1.0;
     positions[3] = antenna3.position;              
 	
-	Antenna antenna4(powerfield, "antenna", fbo, loss_array, gain_patterns);
-	antenna4.position = Vec2(0.7125, 0.50417) * resolution;
-	antenna4.azimuth = M_PI/6.0;
-	antenna4.power = 8.0;
-	antenna4.gainPattern = 0.0;
-    positions[4] = antenna4.position;              
+//	Antenna antenna4(powerfield, "antenna", fbo, loss_array, gain_patterns);
+//	antenna4.position = Vec2(0.7125, 0.50417) * resolution;
+//	antenna4.azimuth = M_PI/4.0;
+//	antenna4.power = 8.0;
+//	antenna4.gainPattern = 2.0;
+//    positions[4] = antenna4.position;
     
-    Antenna antenna5(powerfield, "antenna", fbo, loss_array, gain_patterns);
-	antenna5.position = Vec2(0.7125, 0.65) * resolution;
-	antenna5.azimuth = M_PI/4;
-	antenna5.power = 5.0;
-	antenna5.gainPattern = 1.0;
-    positions[5] = antenna5.position;              
+//    Antenna antenna5(powerfield, "antenna", fbo, loss_array, gain_patterns);
+//	antenna5.position = Vec2(0.7125, 0.65) * resolution;
+//	antenna5.azimuth = M_PI/4;
+//	antenna5.power = 5.0;
+//	antenna5.gainPattern = 1.0;
+//    positions[5] = antenna5.position;
     
-	Antenna antenna6(powerfield, "antenna", fbo, loss_array, gain_patterns);
-	antenna6.position = Vec2(0.603125, 0.504167) * resolution;
-	antenna6.azimuth = M_PI/4;
-	antenna6.power = 5.0;
-	antenna6.gainPattern = 2.0;
-    positions[6] = antenna6.position;              
+//	Antenna antenna6(powerfield, "antenna", fbo, loss_array, gain_patterns);
+//	antenna6.position = Vec2(0.603125, 0.504167) * resolution;
+//	antenna6.azimuth = M_PI/4;
+//	antenna6.power = 5.0;
+//	antenna6.gainPattern = 2.0;
+//    positions[6] = antenna6.position;
     
-	Antenna antenna7(powerfield, "antenna", fbo, loss_array, gain_patterns);
-	antenna7.position = Vec2(0.49375, 0.3583) * resolution;
-	antenna7.azimuth = M_PI/4;
-	antenna7.power = 5.0;
-	antenna7.gainPattern = 3.0;
-    positions[7] = antenna7.position;              
+//	Antenna antenna7(powerfield, "antenna", fbo, loss_array, gain_patterns);
+//	antenna7.position = Vec2(0.49375, 0.3583) * resolution;
+//	antenna7.azimuth = M_PI/4;
+//	antenna7.power = 5.0;
+//	antenna7.gainPattern = 3.0;
+//    positions[7] = antenna7.position;
 
 //    powerfield.Load();
     
-    antenna0.calculateLoss(pfQuad);     
+    antenna0.calculateLoss(pfQuad);
 	antenna1.calculateLoss(pfQuad);     
 	antenna2.calculateLoss(pfQuad);     
 	antenna3.calculateLoss(pfQuad);     
-	antenna4.calculateLoss(pfQuad);     
-    antenna5.calculateLoss(pfQuad);     
-	antenna6.calculateLoss(pfQuad);     
-	antenna7.calculateLoss(pfQuad);     
+//	antenna4.calculateLoss(pfQuad);
+//    antenna5.calculateLoss(pfQuad);
+//	antenna6.calculateLoss(pfQuad);
+//	antenna7.calculateLoss(pfQuad);
     
     // Create the offset angles
     GLuint anglesTextureID= angleArray.getId();        
@@ -330,7 +331,7 @@ int main(void)
     Vec2 myPos;                                     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    for (int mIndex = 0; mIndex<8; ++mIndex) {      
+    for (int mIndex = 0; mIndex<3; ++mIndex) {
         fbo.bindTextureLayer(anglesTextureID, mIndex);     
         myPos = positions[mIndex];                  
         mAntPosition.x = myPos.x ;                  
@@ -347,10 +348,10 @@ int main(void)
 	antenna1.saveImage("Ant01.png");
 	antenna2.saveImage("Ant02.png");
 	antenna3.saveImage("Ant03.png");
-	antenna4.saveImage("Ant04.png");
-    antenna5.saveImage("Ant05.png");
-	antenna6.saveImage("Ant06.png");
-	antenna7.saveImage("Ant07.png");
+//	antenna4.saveImage("Ant04.png");
+//    antenna5.saveImage("Ant05.png");
+//	antenna6.saveImage("Ant06.png");
+//	antenna7.saveImage("Ant07.png");
 
 	int global_time = 0.0;
 
@@ -359,7 +360,7 @@ int main(void)
 	unsigned int iterations = 0;
     
     // determine Whether to use summedNoise or the viewA/B cycle
-    int viewCase = 0;
+    int viewCase = 1;
     
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
@@ -408,15 +409,16 @@ int main(void)
 //                glfwSwapBuffers(window);
 //                glfwPollEvents();
                 fbo.unload();
-                std::cout << "Finished B side" << std::endl;
+//                std::cout << "Finished B side" << std::endl;
                 
                 // Output the result to the screen
                 pr_viewMax.Load();
                 im_viewA.sendTo(pr_viewMax);
+                transfer.sendTo(pr_viewMax);
                 mvQuad.draw();
                 glfwSwapBuffers(window);
                 glfwPollEvents();
-                std::cout << "Finished viewMax" << std::endl;
+//                std::cout << "Finished viewMax" << std::endl;
                 
                 // draw the A side (to get the B view)
                 pr_viewA.Load();
@@ -429,7 +431,7 @@ int main(void)
 //                glfwSwapBuffers(window);
 //                glfwPollEvents();
                 fbo.unload();
-                std::cout << "Finished A side" << std::endl;
+//                std::cout << "Finished A side" << std::endl;
                 break;
                 
             default:
