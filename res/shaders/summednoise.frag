@@ -47,46 +47,34 @@ void main(void)
 
 	float totalPower = 0.0;
 
-	for (int i = 0; i < 8; ++i)
-{
-        // angles values range from 0..1, representing -Pi..Pi
-        float offsetAngle = texture(angles, vec3(uv, i)).r;
-        offsetAngle = offsetAngle - 0.5;
-        // rcvr.x is the pointing angle of the receiver
-        // it is stored in units of 2*Pi, i.e. 0 = -Pi, 1 = Pi
-        offsetAngle = offsetAngle - rcvr.x;
-        if (offsetAngle < 0)
-            offsetAngle = 1 + offsetAngle;
-        else if (offsetAngle > 1)
-            offsetAngle = 1 - offsetAngle;
+	for (int i = 0; i < 4; ++i)
+	{
+		// angles values range from 0..1, representing -Pi..Pi
+		float offsetAngle = texture(angles, vec3(uv, i)).r;
+		offsetAngle = offsetAngle - 0.5;
+		// rcvr.x is the pointing angle of the receiver
+		// it is stored in units of 2*Pi, i.e. 0 = -Pi, 1 = Pi
+		offsetAngle = offsetAngle - rcvr.x;
+		if (offsetAngle < 0)
+			offsetAngle = 1 + offsetAngle;
+		else if (offsetAngle > 1)
+			offsetAngle = 1 - offsetAngle;
     
-    	// antennas values range from 0..1, representing -100..100
-        float NDCDB = texture(antennas, vec3(uv, i)).r;
+		// antennas values range from 0..1, representing -100..100
+		float NDCDB = texture(antennas, vec3(uv, i)).r;
     
-        float rcvrGain = ( gain(offsetAngle,rcvr.y)/200.0 );
+		float rcvrGain = ( gain(offsetAngle,rcvr.y)/200.0 );
     
-        NDCDB += rcvrGain;
+		NDCDB += rcvrGain;
     
-        totalPower += dBtoLin(((NDCDB )* 200.0) - 100.0);
-}
+		totalPower += dBtoLin(((NDCDB )* 200.0) - 100.0);
+
+	}
     
-    float totalPowerDB = LintodB(totalPower);
+	float totalPowerDB = LintodB(totalPower);
 	float totalPowerDBNDC = (totalPowerDB + 100.0) / 200.0;
     
-	/* if (totalPowerDBNDC >= 0.5) */
-	/* { */
-	/* 	FragColor = vec4(totalPowerDBNDC, totalPowerDBNDC, totalPowerDBNDC, 1.0); */
-	/* } */
-	/* else if ((totalPowerDBNDC >= 0.45)) */
-	/* { */
-	/* 	FragColor = vec4(totalPowerDBNDC, totalPowerDBNDC, 0.0, 1.0); */
-	/* } */
-  /*   else */
-	/* { */
-	/* 	FragColor = vec4(0.0, 0.0, totalPowerDBNDC, 1.0); */
-	/* } */
 	FragColor = texture(transfer, totalPowerDBNDC);
-
 
 
 }

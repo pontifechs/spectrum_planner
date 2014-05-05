@@ -37,11 +37,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
-    if (key==GLFW_KEY_LEFT){
-        stopTest= TRUE;}
-    if (key==GLFW_KEY_RIGHT) {
-        stopTest=FALSE;
-    }
+	if (key==GLFW_KEY_LEFT){
+		stopTest= TRUE;}
+	if (key==GLFW_KEY_RIGHT) {
+		stopTest=FALSE;
+	}
 }
 
 GLFWwindow* initGLFW()
@@ -117,15 +117,15 @@ AMesh setupQuad(const Program& prog)
 int main(void)
 {
 	// Get the resource directory from cmake.
-	#ifndef RESOURCE_DIR
-	#error No Resource directory specified from cmake. Check the top-level CMakeLists.txt
-	#endif
+#ifndef RESOURCE_DIR
+#error No Resource directory specified from cmake. Check the top-level CMakeLists.txt
+#endif
 	std::string res(RESOURCE_DIR);
  
-    std::cout << res << std::endl;
+	std::cout << res << std::endl;
     
 	// Initialize GLFW, GLEW, FreeImage
-    GLFWwindow* window = initGLFW();
+	GLFWwindow* window = initGLFW();
 	initGLEW();
 	FreeImage_Initialise();
 
@@ -136,10 +136,10 @@ int main(void)
 	Shader passthroughVert(res + "/shaders/passthrough.vert", Shader::VERTEX);
 	Shader powerfieldFrag(res + "/shaders/powerfield.frag", Shader::FRAGMENT);
 	Shader summedNoiseFrag(res + "/shaders/summednoise.frag", Shader::FRAGMENT);
-    Shader offsetAnglesFrag(res + "/shaders/offsetAngles.frag", Shader::FRAGMENT);
-    Shader sh_viewAFrag(res + "/shaders/fr_maxA.frag", Shader::FRAGMENT);       // test 01
-    Shader sh_viewBFrag(res + "/shaders/fr_maxB.frag", Shader::FRAGMENT);       // test 01
-    Shader sh_viewMaxFrag(res + "/shaders/fr_viewMax.frag", Shader::FRAGMENT);  // test 01
+	Shader offsetAnglesFrag(res + "/shaders/offsetAngles.frag", Shader::FRAGMENT);
+	Shader sh_viewAFrag(res + "/shaders/fr_maxA.frag", Shader::FRAGMENT);       // test 01
+	Shader sh_viewBFrag(res + "/shaders/fr_maxB.frag", Shader::FRAGMENT);       // test 01
+	Shader sh_viewMaxFrag(res + "/shaders/fr_viewMax.frag", Shader::FRAGMENT);  // test 01
 
 	Program powerfield;
 	powerfield.Build(passthroughVert,powerfieldFrag);
@@ -149,209 +149,160 @@ int main(void)
 	summedNoise.Build(passthroughVert, summedNoiseFrag);
 	summedNoise.Load();
     
-    // Added to create Receiver Angles
-    Program offsetAngles;                                   
-    offsetAngles.Build(passthroughVert, offsetAnglesFrag);  
-    offsetAngles.Load();
+	// Added to create Receiver Angles
+	Program offsetAngles;                                   
+	offsetAngles.Build(passthroughVert, offsetAnglesFrag);  
+	offsetAngles.Load();
     
-    Program pr_viewA;                               // test 01
-    pr_viewA.Build(passthroughVert, sh_viewAFrag);  // test 01
-    pr_viewA.Load();                                // test 01
+	Program pr_viewA;                               // test 01
+	pr_viewA.Build(passthroughVert, sh_viewAFrag);  // test 01
+	pr_viewA.Load();                                // test 01
     
-    Program pr_viewB;                               // test 01
-    pr_viewB.Build(passthroughVert, sh_viewBFrag);  // test 01
-    pr_viewB.Load();                                // test 01
+	Program pr_viewB;                               // test 01
+	pr_viewB.Build(passthroughVert, sh_viewBFrag);  // test 01
+	pr_viewB.Load();                                // test 01
     
-    Program pr_viewMax;                             // test 01
-    pr_viewMax.Build(passthroughVert, sh_viewMaxFrag); // test 01
-    pr_viewMax.Load();                              // test 01
+	Program pr_viewMax;                             // test 01
+	pr_viewMax.Build(passthroughVert, sh_viewMaxFrag); // test 01
+	pr_viewMax.Load();                              // test 01
     
 	// Set up FBO and Texture arrays
-    Framebuffer fbo;
-    UImageArray loss_array = UImageArray(summedNoise, "antennas", 640, 480, 8);
-    UImageArray angleArray = UImageArray(summedNoise, "angles",   640, 480, 8);
-    UImageArray im_viewA = UImageArray(pr_viewA, "viewA", 640, 480, 1);     // test 01
-    UImageArray im_viewB = UImageArray(pr_viewB, "viewB", 640, 480, 1);     // test 01
-    
-    GLuint viewA_id = im_viewA.getId();
-    GLuint viewB_id = im_viewB.getId();
-    
-    summedNoise.Load();
-    loss_array.sendTo(summedNoise);
-    angleArray.sendTo(summedNoise);
+	Framebuffer fbo;
+	fbo.load();
+	fbo.unload();
 
-    pr_viewA.Load();                // test 01
-    im_viewB.sendTo(pr_viewA);      // test 01
-    loss_array.sendTo(pr_viewA);    // test 01
-    angleArray.sendTo(pr_viewA);    // test 01
+	UImageArray loss_array = UImageArray(summedNoise, "antennas", 640, 480, 8);
+	UImageArray angleArray = UImageArray(summedNoise, "angles",   640, 480, 8);
+	UImageArray im_viewA = UImageArray(pr_viewA, "viewA", 640, 480, 1);     // test 01
+	UImageArray im_viewB = UImageArray(pr_viewB, "viewB", 640, 480, 1);     // test 01
     
-    pr_viewB.Load();                // test 01
-    im_viewA.sendTo(pr_viewB);      // test 01
-    loss_array.sendTo(pr_viewB);    // test 01
-    angleArray.sendTo(pr_viewB);    // test 01
+	GLuint viewA_id = im_viewA.getId();
+	GLuint viewB_id = im_viewB.getId();
     
-    pr_viewMax.Load();              // test 01
-    im_viewA.sendTo(pr_viewMax);    // test 01
+	loss_array.sendTo(summedNoise);
+	angleArray.sendTo(summedNoise);
+
+	im_viewB.sendTo(pr_viewA);      // test 01
+	loss_array.sendTo(pr_viewA);    // test 01
+	angleArray.sendTo(pr_viewA);    // test 01
     
-    // Meshes are needed to create vertex shader to the fragement shader
+	im_viewA.sendTo(pr_viewB);      // test 01
+	loss_array.sendTo(pr_viewB);    // test 01
+	angleArray.sendTo(pr_viewB);    // test 01
+    
+	im_viewA.sendTo(pr_viewMax);    // test 01
+    
+	// Meshes are needed to create vertex shader to the fragement shader
 	AMesh pfQuad = setupQuad(powerfield);
 	AMesh snQuad = setupQuad(summedNoise);
-    AMesh oaQuad = setupQuad(offsetAngles);
-    AMesh maQuad = setupQuad(pr_viewA);         // test 01
-    AMesh mbQuad = setupQuad(pr_viewB);         // test 01
-    AMesh mvQuad = setupQuad(pr_viewMax);       // test 01
+	AMesh oaQuad = setupQuad(offsetAngles);
+	AMesh maQuad = setupQuad(pr_viewA);         // test 01
+	AMesh mbQuad = setupQuad(pr_viewB);         // test 01
+	AMesh mvQuad = setupQuad(pr_viewMax);       // test 01
     
 	// Powerfield Uniforms
-    Image omni(res + "/tex/antenna_omni.png");
-    Image dir60_S(res + "/tex/antenna_60_simple.png");
-    Image dir30_S(res + "/tex/antenna_30_simple.png");
-    Image dir05_S(res + "/tex/antenna_05_simple.png");
+	Image omni(res + "/tex/antenna_omni.png");
+	Image dir60_S(res + "/tex/antenna_60_simple.png");
+	Image dir30_S(res + "/tex/antenna_30_simple.png");
+	Image dir05_S(res + "/tex/antenna_05_simple.png");
  
-    // Create the gain patterns for the powerField fragment shader
+	// Create the gain patterns for the powerField fragment shader
 	UImageArray gain_patterns(powerfield, "gain_patterns", 512, 1, 4);
-    gain_patterns.setLayer(omni, 0);        
-    gain_patterns.setLayer(dir60_S, 1);     
-    gain_patterns.setLayer(dir30_S, 2);
-    gain_patterns.setLayer(dir05_S, 3);
+	gain_patterns.setLayer(omni, 0);        
+	gain_patterns.setLayer(dir60_S, 1);     
+	gain_patterns.setLayer(dir30_S, 2);
+	gain_patterns.setLayer(dir05_S, 3);
     
-    powerfield.Load();
-    gain_patterns.sendTo(powerfield);
-    
-    summedNoise.Load();
-    gain_patterns.sendTo(summedNoise);
+	gain_patterns.sendTo(powerfield);
+	gain_patterns.sendTo(summedNoise);
 
-		// This is the old transfer function, (blue ch., red/green ch., all ch.)
-		// UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_gray_transfer.png", false);
-		// UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_red_transfer.png", false);
-		UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_dark_red_transfer.png", false);
-    transfer.sendTo(summedNoise);
-    transfer.sendTo(pr_viewMax);
+	UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_dark_red_transfer.png", false);
+	transfer.sendTo(summedNoise);
+	transfer.sendTo(pr_viewMax);
 
  
-    powerfield.Load();
-		UImage alpha_map(powerfield, "global_alpha", res + "/tex/global-alpha.jpg", false);
-    alpha_map.sendTo(powerfield);
-
+	UImage alpha_map(powerfield, "global_alpha", res + "/tex/global-alpha.jpg", false);
+	alpha_map.sendTo(powerfield);
 
 
 	UVec2 resolution(powerfield, "resolution", 640, 480);
-    resolution.sendTo(powerfield);
+	resolution.sendTo(powerfield);
     
-    offsetAngles.Load();
-    UVec2 mAntPosition(offsetAngles, "AntPosition", 0.5,0.0);
-    mAntPosition.sendTo(offsetAngles);
+	UVec2 mAntPosition(offsetAngles, "AntPosition", 0.5,0.0);
+	mAntPosition.sendTo(offsetAngles);
     
-    summedNoise.Load();
-    float pointAngle=0.5, rcvrGainPattern = 1.0;
-    UVec2 rcvrPointing(summedNoise, "rcvr", pointAngle, rcvrGainPattern);
-    rcvrPointing.sendTo(summedNoise);
+	float pointAngle=0.5, rcvrGainPattern = 1.0;
+	UVec2 rcvrPointing(summedNoise, "rcvr", pointAngle, rcvrGainPattern);
+	rcvrPointing.sendTo(summedNoise);
     
-    pr_viewA.Load();                    // test 01
-    gain_patterns.sendTo(pr_viewA);     // test 01
-    rcvrPointing.sendTo(pr_viewA);      // test 01
+	gain_patterns.sendTo(pr_viewA);     // test 01
+	rcvrPointing.sendTo(pr_viewA);      // test 01
     
-    pr_viewB.Load();                    // test 01
-    gain_patterns.sendTo(pr_viewB);     // test 01
-    rcvrPointing.sendTo(pr_viewB);      // test 01
+	gain_patterns.sendTo(pr_viewB);     // test 01
+	rcvrPointing.sendTo(pr_viewB);      // test 01
     
-    // establish a few antennas to work with
-    std::vector<Vec2> positions(8);               
+	// establish a few antennas to work with
+	std::vector<Vec2> positions(8);               
 
-    Antenna antenna0(powerfield, "antenna", fbo, loss_array, gain_patterns);
+	Antenna antenna0(powerfield, "antenna", fbo, loss_array, gain_patterns);
 	antenna0.position = Vec2(0.25, 0.3583) * resolution;
 	antenna0.azimuth = M_PI / 2.0;
 	antenna0.power = 3.0;
 	antenna0.gainPattern = 0.0;
-    positions[0] = antenna0.position;
+	positions[0] = antenna0.position;
 	
-    Antenna antenna1(powerfield, "antenna", fbo, loss_array, gain_patterns);
+	Antenna antenna1(powerfield, "antenna", fbo, loss_array, gain_patterns);
 	antenna1.position = Vec2(0.821875, 0.65) * resolution;
 	antenna1.azimuth = -9.0 * M_PI / 16.0;
 	antenna1.power = 15.0;
 	antenna1.gainPattern = 1.0;
-    positions[1] = antenna1.position;              
+	positions[1] = antenna1.position;              
 
 	Antenna antenna2(powerfield, "antenna", fbo, loss_array, gain_patterns);
 	antenna2.position = Vec2(0.7125, 0.79583) * resolution;
 	antenna2.azimuth = - M_PI;
 	antenna2.power = 15.0;
 	antenna2.gainPattern = 1.0;
-    positions[2] = antenna2.position;              
+	positions[2] = antenna2.position;              
 
 	Antenna antenna3(powerfield, "antenna", fbo, loss_array, gain_patterns);
 	antenna3.position = Vec2(0.49375, 0.3583) * resolution;
 	antenna3.azimuth = - M_PI/2.0;
 	antenna3.power = 8.0;
 	antenna3.gainPattern = 1.0;
-    positions[3] = antenna3.position;              
+	positions[3] = antenna3.position;              
 	
-//	Antenna antenna4(powerfield, "antenna", fbo, loss_array, gain_patterns);
-//	antenna4.position = Vec2(0.7125, 0.50417) * resolution;
-//	antenna4.azimuth = M_PI/4.0;
-//	antenna4.power = 8.0;
-//	antenna4.gainPattern = 2.0;
-//    positions[4] = antenna4.position;
     
-//    Antenna antenna5(powerfield, "antenna", fbo, loss_array, gain_patterns);
-//	antenna5.position = Vec2(0.7125, 0.65) * resolution;
-//	antenna5.azimuth = M_PI/4;
-//	antenna5.power = 5.0;
-//	antenna5.gainPattern = 1.0;
-//    positions[5] = antenna5.position;
-    
-//	Antenna antenna6(powerfield, "antenna", fbo, loss_array, gain_patterns);
-//	antenna6.position = Vec2(0.603125, 0.504167) * resolution;
-//	antenna6.azimuth = M_PI/4;
-//	antenna6.power = 5.0;
-//	antenna6.gainPattern = 2.0;
-//    positions[6] = antenna6.position;
-    
-//	Antenna antenna7(powerfield, "antenna", fbo, loss_array, gain_patterns);
-//	antenna7.position = Vec2(0.49375, 0.3583) * resolution;
-//	antenna7.azimuth = M_PI/4;
-//	antenna7.power = 5.0;
-//	antenna7.gainPattern = 3.0;
-//    positions[7] = antenna7.position;
-
-//    powerfield.Load();
-    
-    antenna0.calculateLoss(pfQuad);
+	antenna0.calculateLoss(pfQuad);
 	antenna1.calculateLoss(pfQuad);     
 	antenna2.calculateLoss(pfQuad);     
 	antenna3.calculateLoss(pfQuad);     
-//	antenna4.calculateLoss(pfQuad);
-//    antenna5.calculateLoss(pfQuad);
-//	antenna6.calculateLoss(pfQuad);
-//	antenna7.calculateLoss(pfQuad);
+
     
-    // Create the offset angles
-    GLuint anglesTextureID= angleArray.getId();        
-    fbo.load();                                     
-    offsetAngles.Load();                            
-    Vec2 myPos;                                     
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// Create the offset angles
+	GLuint anglesTextureID= angleArray.getId();        
+	fbo.load();                                     
+	offsetAngles.Load();                            
+	Vec2 myPos;                                     
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    for (int mIndex = 0; mIndex<3; ++mIndex) {
-        fbo.bindTextureLayer(anglesTextureID, mIndex);     
-        myPos = positions[mIndex];                  
-        mAntPosition.x = myPos.x ;                  
-        mAntPosition.y = myPos.y ;
-        mAntPosition.sendTo(offsetAngles);
-        oaQuad.draw();                              
-        fbo.unbindTextureLayer();                   
-        glfwSwapBuffers(window);                    
+	for (int mIndex = 0; mIndex<3; ++mIndex) {
+		fbo.bindTextureLayer(anglesTextureID, mIndex);     
+		myPos = positions[mIndex];                  
+		mAntPosition.x = myPos.x ;                  
+		mAntPosition.y = myPos.y ;
+		mAntPosition.sendTo(offsetAngles);
+		oaQuad.draw();                              
+		fbo.unbindTextureLayer();                   
+		glfwSwapBuffers(window);                    
 		glfwPollEvents();                           
-    }
-    fbo.unload();
+	}
+	fbo.unload();
     
-    antenna0.saveImage("Ant00.png");
+	antenna0.saveImage("Ant00.png");
 	antenna1.saveImage("Ant01.png");
 	antenna2.saveImage("Ant02.png");
 	antenna3.saveImage("Ant03.png");
-//	antenna4.saveImage("Ant04.png");
-//    antenna5.saveImage("Ant05.png");
-//	antenna6.saveImage("Ant06.png");
-//	antenna7.saveImage("Ant07.png");
 
 	int global_time = 0.0;
 
@@ -359,92 +310,72 @@ int main(void)
 	time_t start_time = time(NULL);
 	unsigned int iterations = 0;
     
-    // determine Whether to use summedNoise or the viewA/B cycle
-    int viewCase = 1;
+	// determine Whether to use summedNoise or the viewA/B cycle
+	int viewCase = 0;
     
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
 	{
-        //
-        if (stopTest) {
-            do {
-                sleep(1);
-                glfwPollEvents();
-            } while (stopTest);
-        }
+		//
+		if (stopTest) {
+			do {
+				sleep(1);
+				glfwPollEvents();
+			} while (stopTest);
+		}
         
 		// Clear screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// // For giggles, have antenna 3 spin around
-        antenna1.azimuth = global_time * 0.005;
-		antenna1.calculateLoss(pfQuad);
-//        antenna2.azimuth = global_time * 0.005;
-//		antenna2.calculateLoss(pfQuad);
-//		antenna3.azimuth = global_time * 0.005;
-//		antenna3.calculateLoss(pfQuad);
-//        antenna4.azimuth = global_time * 0.005;
-//		antenna4.calculateLoss(pfQuad);
-//        antenna5.azimuth = global_time * 0.005;
-//		antenna5.calculateLoss(pfQuad);
-//		antenna6.azimuth = global_time * 0.005;
-//		antenna6.calculateLoss(pfQuad);
-//        antenna7.azimuth = global_time * 0.005+M_PI/4;
-//		antenna7.calculateLoss(pfQuad);
-        
-        double fractPart, intPart;
-        fractPart = modf(global_time*0.005, &intPart);
-        rcvrPointing.x =fractPart;
-        
-        switch (viewCase) {
-            case 1:
-                // draw the B side (to get the A View)
-                pr_viewB.Load();
-                fbo.load();
-                fbo.bindTextureLayer(viewA_id, 0);
-                im_viewB.sendTo(pr_viewB);
-                rcvrPointing.sendTo(pr_viewB);
-                mbQuad.draw();
-                fbo.unbindTextureLayer();
-//                glfwSwapBuffers(window);
-//                glfwPollEvents();
-                fbo.unload();
-//                std::cout << "Finished B side" << std::endl;
-                
-                // Output the result to the screen
-                pr_viewMax.Load();
-                im_viewA.sendTo(pr_viewMax);
-                transfer.sendTo(pr_viewMax);
-                mvQuad.draw();
-                glfwSwapBuffers(window);
-                glfwPollEvents();
-//                std::cout << "Finished viewMax" << std::endl;
-                
-                // draw the A side (to get the B view)
-                pr_viewA.Load();
-                fbo.load();
-                fbo.bindTextureLayer(viewB_id, 0);
-                im_viewA.sendTo(pr_viewA);
-                rcvrPointing.sendTo(pr_viewA);
-                maQuad.draw();
-                fbo.unbindTextureLayer();
-//                glfwSwapBuffers(window);
-//                glfwPollEvents();
-                fbo.unload();
-//                std::cout << "Finished A side" << std::endl;
-                break;
-                
-            default:
-                summedNoise.Load();
-                rcvrPointing.sendTo(summedNoise);
-                snQuad.draw();
-                glfwSwapBuffers(window);
-                glfwPollEvents();
-                break;
-        }
-        
-//		sleep(1);
+		// antenna1.azimuth = global_time * 0.005;
+		// antenna1.calculateLoss(pfQuad);
 
+		// Spin the receiving antenna
+		double fractPart, intPart;
+		fractPart = modf(global_time*0.0005, &intPart);
+		rcvrPointing.x =fractPart;
+        
+		switch (viewCase) {
+		case 1:
+			// draw the B side (to get the A View)
+			pr_viewB.Load();
+			fbo.load();
+			fbo.bindTextureLayer(viewA_id, 0);
+			im_viewB.sendTo(pr_viewB);
+			rcvrPointing.sendTo(pr_viewB);
+			mbQuad.draw();
+			fbo.unbindTextureLayer();
+			fbo.unload();
+                
+			// Output the result to the screen
+			pr_viewMax.Load();
+			im_viewA.sendTo(pr_viewMax);
+			transfer.sendTo(pr_viewMax);
+			mvQuad.draw();
+			glfwSwapBuffers(window);
+			glfwPollEvents();
+                
+			// draw the A side (to get the B view)
+			pr_viewA.Load();
+			fbo.load();
+			fbo.bindTextureLayer(viewB_id, 0);
+			im_viewA.sendTo(pr_viewA);
+			rcvrPointing.sendTo(pr_viewA);
+			maQuad.draw();
+			fbo.unbindTextureLayer();
+			fbo.unload();
+			break;
+                
+		default:
+			summedNoise.Load();
+			rcvrPointing.sendTo(summedNoise);
+			snQuad.draw();
+			glfwSwapBuffers(window);
+			glfwPollEvents();
+			break;
+		}
+        
 		iterations++;
 		global_time++;
 
