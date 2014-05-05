@@ -192,13 +192,8 @@ int main(void)
     
 	im_viewA.sendTo(pr_viewMax);    // test 01
     
-	// Meshes are needed to create vertex shader to the fragement shader
-	AMesh pfQuad = setupQuad(powerfield);
-	AMesh snQuad = setupQuad(summedNoise);
-	AMesh oaQuad = setupQuad(offsetAngles);
-	AMesh maQuad = setupQuad(pr_viewA);         // test 01
-	AMesh mbQuad = setupQuad(pr_viewB);         // test 01
-	AMesh mvQuad = setupQuad(pr_viewMax);       // test 01
+	// Meshes are needed to fill the screen for the fragment shader
+	AMesh screenFill = setupQuad(powerfield);
     
 	// Powerfield Uniforms
 	Image omni(res + "/tex/antenna_omni.png");
@@ -273,10 +268,10 @@ int main(void)
 	positions[3] = antenna3.position;              
 	
     
-	antenna0.calculateLoss(pfQuad);
-	antenna1.calculateLoss(pfQuad);     
-	antenna2.calculateLoss(pfQuad);     
-	antenna3.calculateLoss(pfQuad);     
+	antenna0.calculateLoss(screenFill);
+	antenna1.calculateLoss(screenFill);     
+	antenna2.calculateLoss(screenFill);     
+	antenna3.calculateLoss(screenFill);     
 
     
 	// Create the offset angles
@@ -292,7 +287,7 @@ int main(void)
 		mAntPosition.x = myPos.x ;                  
 		mAntPosition.y = myPos.y ;
 		mAntPosition.sendTo(offsetAngles);
-		oaQuad.draw();                              
+		screenFill.draw();                              
 		fbo.unbindTextureLayer();                   
 		glfwSwapBuffers(window);                    
 		glfwPollEvents();                           
@@ -311,7 +306,7 @@ int main(void)
 	unsigned int iterations = 0;
     
 	// determine Whether to use summedNoise or the viewA/B cycle
-	int viewCase = 0;
+	int viewCase = 1;
     
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
@@ -329,7 +324,7 @@ int main(void)
 
 		// // For giggles, have antenna 3 spin around
 		// antenna1.azimuth = global_time * 0.005;
-		// antenna1.calculateLoss(pfQuad);
+		// antenna1.calculateLoss(pfQuad;
 
 		// Spin the receiving antenna
 		double fractPart, intPart;
@@ -344,7 +339,7 @@ int main(void)
 			fbo.bindTextureLayer(viewA_id, 0);
 			im_viewB.sendTo(pr_viewB);
 			rcvrPointing.sendTo(pr_viewB);
-			mbQuad.draw();
+			screenFill.sendTo(pr_viewB);
 			fbo.unbindTextureLayer();
 			fbo.unload();
                 
@@ -352,7 +347,7 @@ int main(void)
 			pr_viewMax.Load();
 			im_viewA.sendTo(pr_viewMax);
 			transfer.sendTo(pr_viewMax);
-			mvQuad.draw();
+			screenFill.sendTo(pr_viewMax);
 			glfwSwapBuffers(window);
 			glfwPollEvents();
                 
@@ -362,7 +357,7 @@ int main(void)
 			fbo.bindTextureLayer(viewB_id, 0);
 			im_viewA.sendTo(pr_viewA);
 			rcvrPointing.sendTo(pr_viewA);
-			maQuad.draw();
+			screenFill.sendTo(pr_viewA);
 			fbo.unbindTextureLayer();
 			fbo.unload();
 			break;
@@ -370,7 +365,7 @@ int main(void)
 		default:
 			summedNoise.Load();
 			rcvrPointing.sendTo(summedNoise);
-			snQuad.draw();
+			screenFill.sendTo(summedNoise);
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 			break;
