@@ -13,6 +13,8 @@ class Program
 public:
   Program();
 
+	Program(Shader vert, Shader frag);
+
   void Build(Shader vert, Shader frag);
 
   void Load() const;

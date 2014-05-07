@@ -137,34 +137,16 @@ int main(void)
 	Shader powerfieldFrag(res + "/shaders/powerfield.frag", Shader::FRAGMENT);
 	Shader summedNoiseFrag(res + "/shaders/summednoise.frag", Shader::FRAGMENT);
 	Shader offsetAnglesFrag(res + "/shaders/offsetAngles.frag", Shader::FRAGMENT);
-	Shader sh_viewAFrag(res + "/shaders/fr_maxA.frag", Shader::FRAGMENT);       // test 01
-	Shader sh_viewBFrag(res + "/shaders/fr_maxB.frag", Shader::FRAGMENT);       // test 01
-	Shader sh_viewMaxFrag(res + "/shaders/fr_viewMax.frag", Shader::FRAGMENT);  // test 01
+	Shader sh_viewAFrag(res + "/shaders/fr_maxA.frag", Shader::FRAGMENT);
+	Shader sh_viewBFrag(res + "/shaders/fr_maxB.frag", Shader::FRAGMENT);
+	Shader sh_viewMaxFrag(res + "/shaders/fr_viewMax.frag", Shader::FRAGMENT);
 
-	Program powerfield;
-	powerfield.Build(passthroughVert,powerfieldFrag);
-	powerfield.Load();
-	
-	Program summedNoise;
-	summedNoise.Build(passthroughVert, summedNoiseFrag);
-	summedNoise.Load();
-    
-	// Added to create Receiver Angles
-	Program offsetAngles;                                   
-	offsetAngles.Build(passthroughVert, offsetAnglesFrag);  
-	offsetAngles.Load();
-    
-	Program pr_viewA;                               // test 01
-	pr_viewA.Build(passthroughVert, sh_viewAFrag);  // test 01
-	pr_viewA.Load();                                // test 01
-    
-	Program pr_viewB;                               // test 01
-	pr_viewB.Build(passthroughVert, sh_viewBFrag);  // test 01
-	pr_viewB.Load();                                // test 01
-    
-	Program pr_viewMax;                             // test 01
-	pr_viewMax.Build(passthroughVert, sh_viewMaxFrag); // test 01
-	pr_viewMax.Load();                              // test 01
+	Program powerfield(passthroughVert, powerfieldFrag);
+	Program summedNoise(passthroughVert, summedNoiseFrag);
+	Program offsetAngles(passthroughVert, offsetAnglesFrag);  
+	Program pr_viewA(passthroughVert, sh_viewAFrag);
+	Program pr_viewB(passthroughVert, sh_viewBFrag);
+	Program pr_viewMax(passthroughVert, sh_viewMaxFrag);
     
 	// Set up FBO and Texture arrays
 	Framebuffer fbo;
@@ -173,8 +155,8 @@ int main(void)
 
 	UImageArray loss_array = UImageArray(summedNoise, "antennas", 640, 480, 8);
 	UImageArray angleArray = UImageArray(summedNoise, "angles",   640, 480, 8);
-	UImageArray im_viewA = UImageArray(pr_viewA, "viewA", 640, 480, 1);     // test 01
-	UImageArray im_viewB = UImageArray(pr_viewB, "viewB", 640, 480, 1);     // test 01
+	UImageArray im_viewA = UImageArray(pr_viewA, "viewA", 640, 480, 1);
+	UImageArray im_viewB = UImageArray(pr_viewB, "viewB", 640, 480, 1);
     
 	GLuint viewA_id = im_viewA.getId();
 	GLuint viewB_id = im_viewB.getId();
@@ -182,15 +164,15 @@ int main(void)
 	loss_array.sendTo(summedNoise);
 	angleArray.sendTo(summedNoise);
 
-	im_viewB.sendTo(pr_viewA);      // test 01
-	loss_array.sendTo(pr_viewA);    // test 01
-	angleArray.sendTo(pr_viewA);    // test 01
+	im_viewB.sendTo(pr_viewA);
+	loss_array.sendTo(pr_viewA);
+	angleArray.sendTo(pr_viewA);
     
-	im_viewA.sendTo(pr_viewB);      // test 01
-	loss_array.sendTo(pr_viewB);    // test 01
-	angleArray.sendTo(pr_viewB);    // test 01
+	im_viewA.sendTo(pr_viewB);
+	loss_array.sendTo(pr_viewB);
+	angleArray.sendTo(pr_viewB);
     
-	im_viewA.sendTo(pr_viewMax);    // test 01
+	im_viewA.sendTo(pr_viewMax);
     
 	// Meshes are needed to fill the screen for the fragment shader
 	AMesh screenFill = setupQuad(powerfield);
@@ -214,7 +196,6 @@ int main(void)
 	UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_dark_red_transfer.png", false);
 	transfer.sendTo(summedNoise);
 	transfer.sendTo(pr_viewMax);
-
  
 	UImage alpha_map(powerfield, "global_alpha", res + "/tex/global-alpha.jpg", false);
 	alpha_map.sendTo(powerfield);
@@ -230,11 +211,11 @@ int main(void)
 	UVec2 rcvrPointing(summedNoise, "rcvr", pointAngle, rcvrGainPattern);
 	rcvrPointing.sendTo(summedNoise);
     
-	gain_patterns.sendTo(pr_viewA);     // test 01
-	rcvrPointing.sendTo(pr_viewA);      // test 01
+	gain_patterns.sendTo(pr_viewA);
+	rcvrPointing.sendTo(pr_viewA);
     
-	gain_patterns.sendTo(pr_viewB);     // test 01
-	rcvrPointing.sendTo(pr_viewB);      // test 01
+	gain_patterns.sendTo(pr_viewB);
+	rcvrPointing.sendTo(pr_viewB);
     
 	// establish a few antennas to work with
 	std::vector<Vec2> positions(8);               

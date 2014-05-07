@@ -8,6 +8,12 @@ Program::Program()
 {
 }
 
+Program::Program(Shader vert, Shader frag)
+{
+	Build(vert, frag);
+}
+
+
 bool Program::IsBuilt() const
 {
   return m_built;
@@ -15,8 +21,15 @@ bool Program::IsBuilt() const
 
 void Program::Build(Shader vert, Shader frag)
 {
+
   m_vert = vert;
   m_frag = frag;
+
+	if (!(m_vert.IsCompiled() && m_frag.IsCompiled()))
+	{
+		// Both shaders must be compiled.
+		throw 0;
+	}
 
   m_id = glCreateProgram();
   
