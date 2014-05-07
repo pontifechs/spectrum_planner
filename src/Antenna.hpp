@@ -24,6 +24,7 @@ public:
 	UFloat power;	
 	UFloat gainPattern;
 
+	Antenna();
 
 	Antenna(const Program& program, std::string name,
 		      Framebuffer& fbo, UImageArray& loss_array, UImageArray& gain_patterns);
@@ -38,14 +39,14 @@ public:
 private:
 	void send();
 	
-	const Program& m_program;
+	Program m_program;
 
 	UMat3 m_orientation;
 	unsigned int m_layer;
 
-	Framebuffer& m_fbo;
-	UImageArray& m_loss_array; 
-	UImageArray& m_gain_patterns;
+	Framebuffer m_fbo;
+	UImageArray m_loss_array; 
+	UImageArray m_gain_patterns;
 
 };
 

@@ -7,6 +7,11 @@
 class UMat3 : public IUniform, public Mat3
 {
 public:
+
+	UMat3()
+		: Mat3()
+		{}
+
 	UMat3(const Program& program, const std::string name, const Mat3& mat)
 		: IUniform(program, name), Mat3(mat)
 		{}

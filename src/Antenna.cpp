@@ -7,6 +7,10 @@
 #include <util/Image.hpp>
 
 
+Antenna::Antenna()
+{
+}
+
 Antenna::Antenna(const Program& program, std::string name, 
 								 Framebuffer& fbo, UImageArray& loss_array, UImageArray& gain_patterns)
 	: power(program, name + ".power")

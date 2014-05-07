@@ -9,6 +9,10 @@ class UFloat : public IUniform
 public :
 	float val;
 
+	UFloat()
+		: val(0)
+		{}
+
 	UFloat(const Program& program, const std::string name, float _val)
 		: IUniform(program, name), val(_val)
 		{}

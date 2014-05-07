@@ -12,27 +12,27 @@ UImage::UImage(const Program& program,
 	m_tex_core = total_loaded;
 	glActiveTexture(GL_TEXTURE0 + m_tex_core);
 	glGenTextures(1, &m_tex_id);
-    uniformName = name;
+	uniformName = name;
 		
 	// Super hacky for the demo, but all 2D textures are GL_RGBA like normal
 	// and all 1D textures are GL_R32F like the gain maps
 
-		GLint internalFormat;
-		GLenum format;
-		GLenum type;
+	GLint internalFormat;
+	GLenum format;
+	GLenum type;
 
-		if (floatingPoint)
-		{
-			internalFormat = GL_R32F;
-			format = GL_RED;
-			type = GL_FLOAT;
-		}
-		else
-		{
-			internalFormat = GL_RGBA;
-			format = GL_BGRA;
-			type = GL_UNSIGNED_BYTE;
-		}
+	if (floatingPoint)
+	{
+		internalFormat = GL_R32F;
+		format = GL_RED;
+		type = GL_FLOAT;
+	}
+	else
+	{
+		internalFormat = GL_RGBA;
+		format = GL_BGRA;
+		type = GL_UNSIGNED_BYTE;
+	}
 
 	if (height() != 1)
 	{
@@ -66,6 +66,5 @@ UImage::UImage(const Program& program,
 
 void UImage::send() const
 {
-    std::cout << "UImage_Send " << uniformName << " Prog " << m_id << " Tex_Core " << m_tex_core << std::endl;
 	glUniform1i(m_id, m_tex_core);
 }

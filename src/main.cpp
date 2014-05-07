@@ -113,6 +113,49 @@ AMesh setupQuad(const Program& prog)
 	return ret;
 }
 
+std::vector<Antenna> buildAntennas(Program powerfield,
+																	 Framebuffer fbo, 
+																	 UImageArray loss_array,
+																	 UImageArray gain_patterns,
+																	 Vec2 resolution)
+{
+
+	AMesh screenFill = setupQuad(powerfield);
+	std::vector<Antenna> antennas(4);
+
+	antennas[0] = Antenna(powerfield, "antenna", fbo, loss_array, gain_patterns);
+	antennas[0].position = Vec2(0.25, 0.3583) * resolution;
+	antennas[0].azimuth = M_PI / 2.0;
+	antennas[0].power = 3.0;
+	antennas[0].gainPattern = 0.0;
+	
+	antennas[1] = Antenna(powerfield, "antenna", fbo, loss_array, gain_patterns);
+	antennas[1].position = Vec2(0.821875, 0.65) * resolution;
+	antennas[1].azimuth = -9.0 * M_PI / 16.0;
+	antennas[1].power = 15.0;
+	antennas[1].gainPattern = 1.0;
+
+	antennas[2] = Antenna(powerfield, "antenna", fbo, loss_array, gain_patterns);
+	antennas[2].position = Vec2(0.7125, 0.79583) * resolution;
+	antennas[2].azimuth = - M_PI;
+	antennas[2].power = 15.0;
+	antennas[2].gainPattern = 1.0;
+
+	antennas[3] = Antenna(powerfield, "antenna", fbo, loss_array, gain_patterns);
+	antennas[3].position = Vec2(0.49375, 0.3583) * resolution;
+	antennas[3].azimuth = - M_PI/2.0;
+	antennas[3].power = 8.0;
+	antennas[3].gainPattern = 1.0;
+	
+    
+	antennas[0].calculateLoss(screenFill);
+	antennas[1].calculateLoss(screenFill);     
+	antennas[2].calculateLoss(screenFill);     
+	antennas[3].calculateLoss(screenFill);     
+
+	return antennas;
+}
+
 
 int main(void)
 {
@@ -122,8 +165,6 @@ int main(void)
 #endif
 	std::string res(RESOURCE_DIR);
  
-	std::cout << res << std::endl;
-    
 	// Initialize GLFW, GLEW, FreeImage
 	GLFWwindow* window = initGLFW();
 	initGLEW();
@@ -218,42 +259,13 @@ int main(void)
 	rcvrPointing.sendTo(pr_viewB);
     
 	// establish a few antennas to work with
-	std::vector<Vec2> positions(8);               
-
-	Antenna antenna0(powerfield, "antenna", fbo, loss_array, gain_patterns);
-	antenna0.position = Vec2(0.25, 0.3583) * resolution;
-	antenna0.azimuth = M_PI / 2.0;
-	antenna0.power = 3.0;
-	antenna0.gainPattern = 0.0;
-	positions[0] = antenna0.position;
-	
-	Antenna antenna1(powerfield, "antenna", fbo, loss_array, gain_patterns);
-	antenna1.position = Vec2(0.821875, 0.65) * resolution;
-	antenna1.azimuth = -9.0 * M_PI / 16.0;
-	antenna1.power = 15.0;
-	antenna1.gainPattern = 1.0;
-	positions[1] = antenna1.position;              
-
-	Antenna antenna2(powerfield, "antenna", fbo, loss_array, gain_patterns);
-	antenna2.position = Vec2(0.7125, 0.79583) * resolution;
-	antenna2.azimuth = - M_PI;
-	antenna2.power = 15.0;
-	antenna2.gainPattern = 1.0;
-	positions[2] = antenna2.position;              
-
-	Antenna antenna3(powerfield, "antenna", fbo, loss_array, gain_patterns);
-	antenna3.position = Vec2(0.49375, 0.3583) * resolution;
-	antenna3.azimuth = - M_PI/2.0;
-	antenna3.power = 8.0;
-	antenna3.gainPattern = 1.0;
-	positions[3] = antenna3.position;              
-	
-    
-	antenna0.calculateLoss(screenFill);
-	antenna1.calculateLoss(screenFill);     
-	antenna2.calculateLoss(screenFill);     
-	antenna3.calculateLoss(screenFill);     
-
+	std::vector<Antenna> antennas = buildAntennas(powerfield, fbo, loss_array, 
+																								gain_patterns, resolution);
+	std::vector<Vec2> positions(4);
+	for (int i = 0; i < 4; ++i)
+	{
+		positions[i] = antennas[i].position;
+	}
     
 	// Create the offset angles
 	GLuint anglesTextureID= angleArray.getId();        
@@ -275,10 +287,6 @@ int main(void)
 	}
 	fbo.unload();
     
-	antenna0.saveImage("Ant00.png");
-	antenna1.saveImage("Ant01.png");
-	antenna2.saveImage("Ant02.png");
-	antenna3.saveImage("Ant03.png");
 
 	int global_time = 0.0;
 

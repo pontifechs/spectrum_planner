@@ -5,28 +5,35 @@
 #include <shaders/UImage.hpp>
 #include <shaders/UImageArray.hpp>
 
+UImageArray::UImageArray()
+{}
 
 UImageArray::UImageArray(const Program& prog, std::string name,
 												 int width, int height, int layers)
-	: IUniform(prog, name)
-	, m_width(width)
-	, m_height(height)
-	, m_layers(layers)
-    , fragName(name)
 {
-	m_prog = prog.GetId();  // test 18
-    std::cout << "UImageArray " << name << " " << m_prog << " " << glGetUniformLocation(prog.GetId(), name.c_str()) << std::endl;
+	Load(prog, name, width, height, layers);
+}
 
-    // Increment and get the current next available tex core (still hacky)
+
+void UImageArray::Load(const Program& prog, std::string name,
+											 int width, int height, int layers)
+{
+	Build(prog, name);
+	
+	m_width = width;
+	m_height = height;
+	m_layers = layers;
+
+	m_prog = prog.GetId();
+	
+	// Increment and get the current next available tex core (still hacky)
 	m_texCore = UImage::total_loaded++;
-    std::cout << "uniformName " << fragName << " TexCore " << m_texCore << std::endl;
 	glActiveTexture(GL_TEXTURE0 + m_texCore);  // Activate the next texture core
 	glGenTextures(1, &m_textureId); // generate one texture name
 
 	char* blank = new char[m_width * m_height * m_layers * 4];
 	std::fill_n(blank, m_width * m_height * m_layers * 4, 0);
-	
-    
+
 	if (m_height != 1)
 	{
 
@@ -87,7 +94,7 @@ void UImageArray::setLayer(Image img, int layer)
 		GLenum huboError = glGetError();
 		if(huboError){
 //			std::cout << gluErrorString(huboError) << std::endl;
-			std::cout<<"There was an error loading the texture for "<< fragName << " " << huboError << std::endl;
+			std::cout<<"There was an error loading the texture for "<< m_name << " " << huboError << std::endl;
 		}
 
 
