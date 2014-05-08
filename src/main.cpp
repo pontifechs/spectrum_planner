@@ -27,6 +27,16 @@
 #include <ctime> // crude FPS counting
 #include <unistd.h> // for the sleep function
 
+enum ViewMode
+{
+	Maximizer,
+	SummedNoise
+};
+
+ViewMode mode = Maximizer;
+bool paused = false;
+
+
 static void error_callback(int error, const char* description)
 {
 	fputs(description, stderr);
@@ -35,12 +45,23 @@ static void error_callback(int error, const char* description)
 bool stopTest = FALSE;
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	switch (key)
+	{
+	case GLFW_KEY_ESCAPE:
 		glfwSetWindowShouldClose(window, GL_TRUE);
-	if (key==GLFW_KEY_LEFT){
-		stopTest= TRUE;}
-	if (key==GLFW_KEY_RIGHT) {
-		stopTest=FALSE;
+		break;
+	case GLFW_KEY_SPACE:
+		if (action == GLFW_PRESS)
+		{
+			paused = !paused;
+		}
+		break;
+	case GLFW_KEY_1:
+		mode = Maximizer;
+		break;
+	case GLFW_KEY_2:
+		mode = SummedNoise;
+		break;
 	}
 }
 
@@ -295,17 +316,14 @@ int main(void)
 	unsigned int iterations = 0;
     
 	// determine Whether to use summedNoise or the viewA/B cycle
-	int viewCase = 1;
     
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
 	{
 		//
-		if (stopTest) {
-			do {
-				sleep(1);
-				glfwPollEvents();
-			} while (stopTest);
+		while (paused)
+		{
+			glfwPollEvents();
 		}
         
 		// Clear screen
@@ -320,8 +338,8 @@ int main(void)
 		fractPart = modf(global_time*0.0005, &intPart);
 		rcvrPointing.x =fractPart;
         
-		switch (viewCase) {
-		case 1:
+		switch (mode) {
+		case Maximizer:
 			// draw the B side (to get the A View)
 			pr_viewB.Load();
 			fbo.load();
@@ -351,7 +369,7 @@ int main(void)
 			fbo.unload();
 			break;
                 
-		default:
+		case SummedNoise:
 			summedNoise.Load();
 			rcvrPointing.sendTo(summedNoise);
 			screenFill.sendTo(summedNoise);
