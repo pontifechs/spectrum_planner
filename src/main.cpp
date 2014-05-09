@@ -29,23 +29,28 @@
 
 enum ViewMode
 {
-	Maximizer,
-	SummedNoise
+	GainPattern,
+	AlphaMap,
+	SinglePathLoss,
+	SummedNoise,
+	Maximizer
 };
 
-ViewMode mode = Maximizer;
+ViewMode mode = GainPattern;
 bool paused = false;
 
-bool txRotate = true;
+bool txRotate = false;
 bool txTranslate = false;
 bool rxRotate = false;
 
-// Pointers to some critical things needed inside of
-// the key callback function
-Framebuffer* fboPtr;
+
+// Pointers to some critical things needed inside of the key callback
+Framebuffer* fboPtr;    
 UImageArray* viewAPtr;
 UImageArray* viewBPtr;
 
+UFloat* gainPatternLayerPtr;
+UFloat* antennaLayerPtr;
 
 static void error_callback(int error, const char* description)
 {
@@ -68,37 +73,57 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		break;
 
 	case GLFW_KEY_1:
-		mode = Maximizer;
-		viewAPtr->clearAll(*fboPtr);
-		viewBPtr->clearAll(*fboPtr);
+		if (action == GLFW_PRESS)
+		{
+			*gainPatternLayerPtr = (int)(gainPatternLayerPtr->val + 1) % 4;
+			gainPatternLayerPtr->send();
+		}
+		mode = GainPattern;
 		break;
 
 	case GLFW_KEY_2:
-		mode = SummedNoise;
+		mode = AlphaMap;
 		break;
 
 	case GLFW_KEY_3:
 		if (action == GLFW_PRESS)
 		{
+			*antennaLayerPtr = (int)(antennaLayerPtr->val + 1) % 4;
+			antennaLayerPtr->send();
+		}
+		mode = SinglePathLoss;
+		break;
+
+
+	case GLFW_KEY_4:
+		mode = SummedNoise;
+		break;
+
+	case GLFW_KEY_5:
+		mode = Maximizer;
+		viewAPtr->clearAll(*fboPtr);
+		viewBPtr->clearAll(*fboPtr);
+		break;
+
+	case GLFW_KEY_R:
+		if (action == GLFW_PRESS)
+		{
 			txRotate = !txRotate;
 		}
 		break;
-
-	case GLFW_KEY_4:
+	case GLFW_KEY_T:
 		if (action == GLFW_PRESS)
 		{
 			txTranslate = !txTranslate;
 		}
-
 		break;
-	case GLFW_KEY_5:
+	case GLFW_KEY_X:
 		if (action == GLFW_PRESS)
 		{
 			rxRotate = !rxRotate;
 		}
-
-
 		break;
+
 	}
 }
 
@@ -136,10 +161,9 @@ GLFWwindow* initGLFW()
 	return window;
 }
 
+// Set up GLEW
 void initGLEW()
 {
-	// Set up GLEW
-
 	// Apparently this is necessary black magic. Don't ask me.
 	glewExperimental = GL_TRUE;
 
@@ -238,6 +262,9 @@ int main(void)
 	Shader sh_viewAFrag(res + "/shaders/fr_maxA.frag", Shader::FRAGMENT);
 	Shader sh_viewBFrag(res + "/shaders/fr_maxB.frag", Shader::FRAGMENT);
 	Shader sh_viewMaxFrag(res + "/shaders/fr_viewMax.frag", Shader::FRAGMENT);
+	Shader gainPatternKeyFrag(res + "/shaders/gainpattern_key.frag", Shader::FRAGMENT);
+	Shader alphaMapFrag(res + "/shaders/texthrough.frag", Shader::FRAGMENT);
+	Shader singlePathLossFrag(res + "/shaders/single_path_loss.frag", Shader::FRAGMENT);
 
 	Program powerfield(passthroughVert, powerfieldFrag);
 	Program summedNoise(passthroughVert, summedNoiseFrag);
@@ -245,7 +272,11 @@ int main(void)
 	Program pr_viewA(passthroughVert, sh_viewAFrag);
 	Program pr_viewB(passthroughVert, sh_viewBFrag);
 	Program pr_viewMax(passthroughVert, sh_viewMaxFrag);
+	Program gainPatternKey(passthroughVert, gainPatternKeyFrag);
+	Program alphaMap(passthroughVert, alphaMapFrag);
+	Program singlePathLoss(passthroughVert, singlePathLossFrag);
     
+
 	// Set up FBO and Texture arrays
 	Framebuffer fbo;
 	fboPtr = &fbo;
@@ -274,6 +305,8 @@ int main(void)
 	angleArray.sendTo(pr_viewB);
     
 	im_viewA.sendTo(pr_viewMax);
+
+	loss_array.sendTo(singlePathLoss);
     
 	// Meshes are needed to fill the screen for the fragment shader
 	AMesh screenFill = setupQuad(powerfield);
@@ -293,14 +326,22 @@ int main(void)
     
 	gain_patterns.sendTo(powerfield);
 	gain_patterns.sendTo(summedNoise);
+	gain_patterns.sendTo(gainPatternKey);
+
+	UFloat gainPatternLayer(gainPatternKey, "gainPatternLayer", 0);
+	gainPatternLayerPtr = &gainPatternLayer;
+
+	UFloat antennaLayer(singlePathLoss, "antennaLayer", 0);
+	antennaLayerPtr = &antennaLayer;
 
 	UImage transfer(summedNoise, "transfer", res + "/tex/blue_yellow_dark_red_transfer.png", false);
 	transfer.sendTo(summedNoise);
 	transfer.sendTo(pr_viewMax);
+
  
 	UImage alpha_map(powerfield, "global_alpha", res + "/tex/global-alpha.jpg", false);
 	alpha_map.sendTo(powerfield);
-
+	alpha_map.sendTo(alphaMap);
 
 	UVec2 resolution(powerfield, "resolution", 640, 480);
 	resolution.sendTo(powerfield);
@@ -355,7 +396,6 @@ int main(void)
 	
 	float txTime = 0;
 
-	// determine Whether to use summedNoise or the viewA/B cycle
     
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
@@ -391,16 +431,34 @@ int main(void)
 			antennas[1].calculateLoss(screenFill);
 		}
 
-
 		if (rxRotate)
 		{
 			rcvrPointing.x += 0.005;
 		}
-
-
-
         
 		switch (mode) {
+
+		case GainPattern:
+			gainPatternKey.Load();
+			screenFill.sendTo(gainPatternKey);
+			break;
+
+		case AlphaMap:
+			alphaMap.Load();
+			screenFill.sendTo(gainPatternKey);
+			break;
+
+		case SinglePathLoss:
+			singlePathLoss.Load();
+			screenFill.sendTo(singlePathLoss);
+			break;
+
+		case SummedNoise:
+			summedNoise.Load();
+			rcvrPointing.sendTo(summedNoise);
+			screenFill.sendTo(summedNoise);
+			break;
+
 		case Maximizer:
 			// draw the B side (to get the A View)
 			pr_viewB.Load();
@@ -417,8 +475,6 @@ int main(void)
 			im_viewA.sendTo(pr_viewMax);
 			transfer.sendTo(pr_viewMax);
 			screenFill.sendTo(pr_viewMax);
-			glfwSwapBuffers(window);
-			glfwPollEvents();
                 
 			// draw the A side (to get the B view)
 			pr_viewA.Load();
@@ -430,15 +486,13 @@ int main(void)
 			fbo.unbindTextureLayer();
 			fbo.unload();
 			break;
+
+
                 
-		case SummedNoise:
-			summedNoise.Load();
-			rcvrPointing.sendTo(summedNoise);
-			screenFill.sendTo(summedNoise);
-			glfwSwapBuffers(window);
-			glfwPollEvents();
-			break;
 		}
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
         
 
 		time_t now = time(NULL);
