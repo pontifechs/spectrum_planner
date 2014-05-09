@@ -36,6 +36,11 @@ float gain(float angle)
 }
 
 
+bool floatEquals(float lhs, float rhs)
+{
+	return (abs(lhs - rhs) <= 0.5);
+}
+
 
 void main(void)
 {
@@ -55,7 +60,9 @@ void main(void)
 		FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 	}
 
-	// Check the opposite angle (180 around)
-
+	if ( floatEquals(length(pos_to_point), 144))
+	{
+		FragColor = vec4(0.5, 0.0, 0.0, 1.0);
+	}
 
 }
