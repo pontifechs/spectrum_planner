@@ -36,13 +36,22 @@ enum ViewMode
 ViewMode mode = Maximizer;
 bool paused = false;
 
+bool txRotate = true;
+bool txTranslate = false;
+bool rxRotate = false;
+
+// Pointers to some critical things needed inside of
+// the key callback function
+Framebuffer* fboPtr;
+UImageArray* viewAPtr;
+UImageArray* viewBPtr;
+
 
 static void error_callback(int error, const char* description)
 {
 	fputs(description, stderr);
 }
 
-bool stopTest = FALSE;
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	switch (key)
@@ -50,17 +59,45 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	case GLFW_KEY_ESCAPE:
 		glfwSetWindowShouldClose(window, GL_TRUE);
 		break;
+
 	case GLFW_KEY_SPACE:
 		if (action == GLFW_PRESS)
 		{
 			paused = !paused;
 		}
 		break;
+
 	case GLFW_KEY_1:
 		mode = Maximizer;
+		viewAPtr->clearAll(*fboPtr);
+		viewBPtr->clearAll(*fboPtr);
 		break;
+
 	case GLFW_KEY_2:
 		mode = SummedNoise;
+		break;
+
+	case GLFW_KEY_3:
+		if (action == GLFW_PRESS)
+		{
+			txRotate = !txRotate;
+		}
+		break;
+
+	case GLFW_KEY_4:
+		if (action == GLFW_PRESS)
+		{
+			txTranslate = !txTranslate;
+		}
+
+		break;
+	case GLFW_KEY_5:
+		if (action == GLFW_PRESS)
+		{
+			rxRotate = !rxRotate;
+		}
+
+
 		break;
 	}
 }
@@ -168,7 +205,6 @@ std::vector<Antenna> buildAntennas(Program powerfield,
 	antennas[3].power = 8.0;
 	antennas[3].gainPattern = 1.0;
 	
-    
 	antennas[0].calculateLoss(screenFill);
 	antennas[1].calculateLoss(screenFill);     
 	antennas[2].calculateLoss(screenFill);     
@@ -212,6 +248,7 @@ int main(void)
     
 	// Set up FBO and Texture arrays
 	Framebuffer fbo;
+	fboPtr = &fbo;
 	fbo.load();
 	fbo.unload();
 
@@ -219,6 +256,8 @@ int main(void)
 	UImageArray angleArray = UImageArray(summedNoise, "angles",   640, 480, 8);
 	UImageArray im_viewA = UImageArray(pr_viewA, "viewA", 640, 480, 1);
 	UImageArray im_viewB = UImageArray(pr_viewB, "viewB", 640, 480, 1);
+	viewAPtr = &im_viewA;
+	viewBPtr = &im_viewB;
     
 	GLuint viewA_id = im_viewA.getId();
 	GLuint viewB_id = im_viewB.getId();
@@ -308,19 +347,24 @@ int main(void)
 	}
 	fbo.unload();
     
-
-	int global_time = 0.0;
-
+	
 	// Crude timing for rough FPS estimate
 	time_t start_time = time(NULL);
-	unsigned int iterations = 0;
-    
+	int global_time = 0;
+	int iterations = 0;
+	
+	float txTime = 0;
+
 	// determine Whether to use summedNoise or the viewA/B cycle
     
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
 	{
-		//
+		global_time++;
+		iterations++;
+		
+
+		// Handle pausing.
 		while (paused)
 		{
 			glfwPollEvents();
@@ -329,14 +373,32 @@ int main(void)
 		// Clear screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// // For giggles, have antenna 3 spin around
-		// antenna1.azimuth = global_time * 0.005;
-		// antenna1.calculateLoss(pfQuad;
+		if (txRotate)
+		{
+			// For giggles, have antenna 3 spin around
+			antennas[1].azimuth += 0.005;
+			antennas[1].calculateLoss(screenFill);
+		}
 
-		// Spin the receiving antenna
-		double fractPart, intPart;
-		fractPart = modf(global_time*0.0005, &intPart);
-		rcvrPointing.x =fractPart;
+		if (txTranslate)
+		{
+			txTime += 0.005;
+			Vec2 center = Vec2(0.821875, 0.65) * resolution;
+			center.x += 50*cos(txTime);
+			center.y += 50*sin(txTime);
+			
+			antennas[1].position = center;
+			antennas[1].calculateLoss(screenFill);
+		}
+
+
+		if (rxRotate)
+		{
+			rcvrPointing.x += 0.005;
+		}
+
+
+
         
 		switch (mode) {
 		case Maximizer:
@@ -378,8 +440,6 @@ int main(void)
 			break;
 		}
         
-		iterations++;
-		global_time++;
 
 		time_t now = time(NULL);
 		if (now - start_time >= 5)

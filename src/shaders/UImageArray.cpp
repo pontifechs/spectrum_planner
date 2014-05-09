@@ -194,3 +194,15 @@ GLuint UImageArray::getTexCoreID()
 {
     return m_texCore;
 }
+
+
+void UImageArray::clearAll(Framebuffer fbo)
+{
+	fbo.load();
+	for (int i = 0; i < m_layers; ++i)
+	{
+		fbo.bindTextureLayer(m_textureId, i);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
+	fbo.unload();
+}

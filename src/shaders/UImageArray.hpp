@@ -6,6 +6,7 @@
 #include <util/Image.hpp>
 #include <shaders/IUniform.hpp>
 #include <shaders/Program.hpp>
+#include <shaders/Framebuffer.hpp>
 
 #include <vector>
 #include <string>
@@ -36,6 +37,8 @@ public:
 	void loadFromTextureCore_32F();
 	void saveAll(std::string path);
 	GLuint getTexCoreID();
+
+	void clearAll(Framebuffer fbo);
     
 	virtual void send() const;
 
