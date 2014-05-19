@@ -32,9 +32,18 @@ enum ViewMode
 	GainPattern,
 	AlphaMap,
 	SinglePathLoss,
-	SummedNoise,
-	Maximizer
+    StaticSum,      // Test001 20140519
+	// SummedNoise, // Test001 20140519
+    MovingAnt,      // Test001 20140519
+	Maximizer       // Test001 20140519
 };
+
+struct  nodePoint{  // Test001 20140519
+    float   x;      // Test001 20140519
+    float   y;      // Test001 20140519
+    float   az;     // Test001 20140519
+    int     state;  // Test002 20140519
+};                  // Test001 20140519
 
 ViewMode mode = GainPattern;
 bool paused = false;
@@ -57,6 +66,7 @@ static void error_callback(int error, const char* description)
 	fputs(description, stderr);
 }
 
+float defaultAntenna;   // Test003 20140519
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	switch (key)
@@ -94,30 +104,54 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		mode = SinglePathLoss;
 		break;
 
-
 	case GLFW_KEY_4:
-		mode = SummedNoise;
+		// mode = SummedNoise; // Test001 20140519
+        mode = StaticSum;  // Test001 20140519
 		break;
 
 	case GLFW_KEY_5:
-		mode = Maximizer;
-		viewAPtr->clearAll(*fboPtr);
-		viewBPtr->clearAll(*fboPtr);
+		// mode = Maximizer;    // Test001 20140519
+        mode = MovingAnt;   // Test001 20140519
+		// viewAPtr->clearAll(*fboPtr);  // Test001 20140519
+		// viewBPtr->clearAll(*fboPtr);  // Test001 20140519
 		break;
+            
+    case GLFW_KEY_6:
+        mode = Maximizer;           // Test001 20140519
+        viewAPtr->clearAll(*fboPtr);  // Test001 20140519
+        viewBPtr->clearAll(*fboPtr);  // Test001 20140519
+        break;
 
-	case GLFW_KEY_R:
+    case GLFW_KEY_J:
+        defaultAntenna = 0.0;       // Test003 20140519
+        break;
+            
+    case GLFW_KEY_K:
+        defaultAntenna = 1.0;       // Test003 20140519
+        break;
+            
+    case GLFW_KEY_L:
+        defaultAntenna = 2.0;       // Test003 20140519
+        break;
+            
+    case GLFW_KEY_M:
+        defaultAntenna = 3.0;       // Test003 20140519
+        break;
+            
+            
+	case GLFW_KEY_T:
 		if (action == GLFW_PRESS)
 		{
 			txRotate = !txRotate;
 		}
 		break;
-	case GLFW_KEY_T:
+	case GLFW_KEY_X:
 		if (action == GLFW_PRESS)
 		{
 			txTranslate = !txTranslate;
 		}
 		break;
-	case GLFW_KEY_X:
+	case GLFW_KEY_R:
 		if (action == GLFW_PRESS)
 		{
 			rxRotate = !rxRotate;
@@ -196,10 +230,10 @@ AMesh setupQuad(const Program& prog)
 }
 
 std::vector<Antenna> buildAntennas(Program powerfield,
-																	 Framebuffer fbo, 
-																	 UImageArray loss_array,
-																	 UImageArray gain_patterns,
-																	 Vec2 resolution)
+                                   Framebuffer fbo,
+									UImageArray loss_array,
+									UImageArray gain_patterns,
+									Vec2 resolution)
 {
 
 	AMesh screenFill = setupQuad(powerfield);
@@ -236,7 +270,266 @@ std::vector<Antenna> buildAntennas(Program powerfield,
 
 	return antennas;
 }
+// Function is a test of mutiple Antenna reset 20140519
+void setAntMult(std::vector<Antenna> antennas, Vec2 resolution, AMesh screenFill)
+{
+	antennas[0].position = Vec2(0.25, 0.3583) * resolution;
+	antennas[0].azimuth = M_PI / 2.0;
+	antennas[0].power = 3.0;
+	antennas[0].gainPattern = 0.0;
+	
+	antennas[1].position = Vec2(0.821875, 0.65) * resolution;
+	antennas[1].azimuth = -9.0 * M_PI / 16.0;
+	antennas[1].power = 15.0;
+	antennas[1].gainPattern = 1.0;
+    
+	antennas[2].position = Vec2(0.7125, 0.79583) * resolution;
+	antennas[2].azimuth = - M_PI;
+	antennas[2].power = 15.0;
+	antennas[2].gainPattern = 1.0;
+    
+	antennas[3].position = Vec2(0.49375, 0.3583) * resolution;
+	antennas[3].azimuth = - M_PI/2.0;
+	antennas[3].power = 8.0;
+	antennas[3].gainPattern = 1.0;
+	
+	antennas[0].calculateLoss(screenFill);
+	antennas[1].calculateLoss(screenFill);
+	antennas[2].calculateLoss(screenFill);
+	antennas[3].calculateLoss(screenFill);
 
+}
+
+// Fuction is a test of ssingel antenna equivalent 20140519
+// i.e. set all antennas ecept 1 to power of 0 & Omni-directional
+void setAntSingle(std::vector<Antenna> antennas, Vec2 resolution, AMesh screenFill)
+{
+    antennas[0].position = Vec2(0.25, 0.3583) * resolution;
+	antennas[0].azimuth = M_PI / 2.0;
+	antennas[0].power = 0.0;
+	antennas[0].gainPattern = 0.0;
+	
+	antennas[1].position = Vec2(0.821875, 0.65) * resolution;
+	antennas[1].azimuth = -9.0 * M_PI / 16.0;
+	antennas[1].power = 10.0;
+	antennas[1].gainPattern = 2.0;
+    
+	antennas[2].position = Vec2(0.7125, 0.79583) * resolution;
+	antennas[2].azimuth = - M_PI;
+	antennas[2].power = 0.0;
+	antennas[2].gainPattern = 0.0;
+    
+	antennas[3].position = Vec2(0.49375, 0.3583) * resolution;
+	antennas[3].azimuth = - M_PI/2.0;
+	antennas[3].power = 0.0;
+	antennas[3].gainPattern = 0.0;
+	
+	antennas[0].calculateLoss(screenFill);
+	antennas[1].calculateLoss(screenFill);
+	antennas[2].calculateLoss(screenFill);
+	antennas[3].calculateLoss(screenFill);
+}
+
+enum{           // Test001 20140519
+    RIGHT,      // Test001 20140519
+    TURN1,      // Test001 20140519
+    TURN2,      // Test001 20140519
+    LEFT        // Test001 20140519
+};              // Test001 20140519
+// New function  Test001 20140519
+nodePoint getNewPointing( nodePoint curr, float delta){
+    nodePoint   newPos;
+    float   s, v, r, l, maxCircuit, maxTurn;
+    float   dx, cl, cr, cy, num ;
+    float   d_turn1, d_right, d_turn2, d_left;
+    int     myCase;
+    
+    r   = 0.1;
+    v   = 0.5;
+    cl  = 0.2;
+    cr  = 0.8;
+    l   = cr - cl;
+    cy  = 0.7;
+    
+    maxTurn     = 3.14159*r;
+    maxCircuit  = 2*l + 2*maxTurn;
+    num         = 0;
+    
+    s   = v*delta;          // Calculate the distance traveled
+    // Make sure that this distance is less than a full circuit
+    if (s > maxCircuit) {
+        num = floor(s/maxCircuit);
+    }
+    s   = s - num * maxCircuit;
+    
+    switch (curr.state) {
+        case RIGHT:
+            d_turn1 = cr - curr.x;           // dist to enter turn 1
+            d_left  = d_turn1 + maxTurn;    // dist to enter left section
+            d_turn2 = d_left + l;           // dist to enter turn 1
+            d_right = d_turn2 + maxTurn;    // dist to return to right section
+
+            if (s > d_turn1) {
+                if (s > d_left) {
+                    if (s > d_turn2) {
+                        if (s > d_right) {
+                            dx      = s - d_right;
+                            myCase  = RIGHT;
+                        } else {
+                            dx      = s - d_turn2;
+                            myCase  = TURN2;
+                        }
+                    } else {
+                        dx      = s - d_left;
+                        myCase  = LEFT;
+                    }
+                } else {
+                    dx      = s - d_turn1;
+                    myCase  = TURN1;
+                }
+            } else {
+                dx      = curr.x + s - cl;
+                myCase  = RIGHT;
+            }
+            break;
+            
+        case TURN1:
+            d_left  = r * (3.14159 - curr.az);
+            d_turn2 = d_left + l;
+            d_right = d_turn2 + maxTurn;
+            d_turn1 = d_right + l;
+
+            if (s > d_left) {
+                if (s > d_turn2) {
+                    if (s > d_right) {
+                        if (s > d_turn1) {
+                            dx      = s - d_turn1;
+                            myCase  = TURN1;
+                        } else {
+                            dx      = s - d_right;
+                            myCase  = RIGHT;
+                        }
+                    } else {
+                        dx      = s - d_turn2;
+                        myCase  = TURN2;
+                    }
+                } else {
+                    dx      = s - d_left;
+                    myCase  = LEFT;
+                }
+            } else {
+                dx      = r * curr.az + s;
+                myCase  = TURN1;
+            }
+            break;
+            
+        case LEFT:
+            d_turn2 = curr.x - cl;
+            d_right = d_turn2 + maxTurn;
+            d_turn1 = d_right + l;
+            d_left  = d_turn1 + maxTurn;
+
+            if (s > d_turn2) {
+                if (s > d_right) {
+                    if (s > d_turn1) {
+                        if (s > d_left) {
+                            dx      = s - d_left;
+                            myCase  = LEFT;
+                        } else {
+                            dx      = s - d_turn1;
+                            myCase  = TURN1;
+                        }
+                    } else {
+                        dx      = s - d_right;
+                        myCase  = RIGHT;
+                    }
+                } else {
+                    dx      = s - d_turn2;
+                    myCase  = TURN2;
+                }
+            } else {
+                dx      = cr - curr.x + s;
+                myCase  = LEFT;
+            }
+            break;
+            
+        case TURN2:
+            d_right = r * (2 * 3.14159 - curr.az);
+            d_turn1 = d_right + l;
+            d_left  = d_turn1 + maxTurn;
+            d_turn2 = d_left + l;
+
+            if (s > d_right) {
+                if (s > d_turn1) {
+                    if (s > d_left) {
+                        if (s > d_turn2) {
+                            dx      = s - d_turn2;
+                            myCase  = TURN2;
+                        } else {
+                            dx      = s -d_left;
+                            myCase  = LEFT;
+                        }
+                    } else {
+                        dx      = s - d_turn1;
+                        myCase  = TURN1;
+                    }
+                } else {
+                    dx      = s - d_right;
+                    myCase  = RIGHT;
+                }
+            } else {
+                dx      = r * (curr.az - 3.14159) + s;
+                myCase  = TURN2;
+            }
+            break;
+            
+        default:
+            newPos.x    = 0.45;
+            newPos.y    = 0.35;
+            newPos.az   = 0;
+            myCase      = -1;
+            break;
+    }
+    
+    switch (myCase) {
+        case RIGHT:
+            newPos.x    = cl + dx;
+            newPos.y    = cy - r;
+            newPos.az   = 0;
+            newPos.state= RIGHT;
+            break;
+        
+        case TURN1:
+            newPos.az   = dx/r;
+            newPos.x    = cr + r * sin(curr.az);
+            newPos.y    = cy - r * cos(curr.az);
+            newPos.state= TURN1;
+            break;
+        
+        case LEFT:
+            newPos.x    = cr - dx;
+            newPos.y    = cy + r;
+            newPos.az   = 3.14159;
+            newPos.state= LEFT;
+            break;
+            
+        case TURN2:
+            newPos.az    = 3.14159 + dx/r;
+            newPos.x    = cl + r * sin(curr.az);
+            newPos.y    = cy - r * cos(curr.az);
+            newPos.state= TURN2;
+            break;
+            
+        default:
+            newPos.x    = cl;
+            newPos.y    = cy - r;
+            newPos.az   = 0;
+            newPos.state= RIGHT;
+            break;
+    }
+    
+    return newPos;
+}
 
 int main(void)
 {
@@ -360,8 +653,8 @@ int main(void)
 	rcvrPointing.sendTo(pr_viewB);
     
 	// establish a few antennas to work with
-	std::vector<Antenna> antennas = buildAntennas(powerfield, fbo, loss_array, 
-																								gain_patterns, resolution);
+	std::vector<Antenna> antennas = buildAntennas(powerfield, fbo, loss_array,	gain_patterns, resolution);
+    
 	std::vector<Vec2> positions(4);
 	for (int i = 0; i < 4; ++i)
 	{
@@ -396,7 +689,14 @@ int main(void)
 	
 	float txTime = 0;
 
-    
+    int mIndex;         // test of theory 20140509_01
+    bool multAntCase = true; // Test001 20140519
+    nodePoint antPt;        // Test001 20140519
+    antPt.x = 0.45;         // Test001 20140519
+    antPt.y = 0.35;         // Test001 20140519
+    antPt.az = 0;           // Test001 20140519
+    antPt.state = RIGHT;    // Test002 20141519
+    defaultAntenna = 3.0;   // test003 20140519
 	// Draw loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -416,7 +716,8 @@ int main(void)
 		if (txRotate)
 		{
 			// For giggles, have antenna 3 spin around
-			antennas[1].azimuth += 0.005;
+            // antennas[1].azimuth += 0.005;
+            antennas[1].azimuth += 0.001;
 			antennas[1].calculateLoss(screenFill);
 		}
 
@@ -429,6 +730,18 @@ int main(void)
 			
 			antennas[1].position = center;
 			antennas[1].calculateLoss(screenFill);
+            
+            // Test of angleoffset theory 20140509_01
+            fbo.load();
+            offsetAngles.Load();
+            mIndex = 1;
+            fbo.bindTextureLayer(anglesTextureID, mIndex);
+            mAntPosition.x = center.x;
+            mAntPosition.y = center.y;
+            mAntPosition.sendTo(offsetAngles);
+            screenFill.draw();
+            fbo.unbindTextureLayer();
+            fbo.unload();
 		}
 
 		if (rxRotate)
@@ -438,29 +751,107 @@ int main(void)
         
 		switch (mode) {
 
-		case GainPattern:
+		case GainPattern:                       // Key 1
 			gainPatternKey.Load();
 			screenFill.sendTo(gainPatternKey);
 			break;
 
-		case AlphaMap:
+		case AlphaMap:                          // Key 2
 			alphaMap.Load();
 			screenFill.sendTo(gainPatternKey);
 			break;
 
-		case SinglePathLoss:
+		case SinglePathLoss:                    // Key 3
 			singlePathLoss.Load();
 			screenFill.sendTo(singlePathLoss);
 			break;
 
-		case SummedNoise:
-			summedNoise.Load();
-			rcvrPointing.sendTo(summedNoise);
-			screenFill.sendTo(summedNoise);
-			break;
+//		case SummedNoise:                   // Test001 20140519
+//			summedNoise.Load();
+//			rcvrPointing.sendTo(summedNoise);
+//			screenFill.sendTo(summedNoise);
+//			break;
+                
+        case StaticSum:                         // Key 4
+            summedNoise.Load();         // Test001 20140519
+            txRotate = false;           // Test001 20140519
+            rxRotate = false;           // Test001 20140519
+            if(!multAntCase){           // Test001 20140519
+                setAntMult(antennas, resolution, screenFill);  // Test001
+                multAntCase = true;         // Test001 20140519
+                }
+            rcvrPointing.sendTo(summedNoise);  // Test001 20140519
+            screenFill.sendTo(summedNoise);    // Test001 20140519
+            break;
+            
+        case MovingAnt:                         // Key 5
+            summedNoise.Load();         // Test001 20140519
+            txRotate = false;           // Test001 20140519
+            rxRotate = false;           // Test001 20140519
+            if(multAntCase){            // Test001 20140519
+                setAntSingle(antennas, resolution, screenFill); // Test001
+                multAntCase = false;        // Test001 20140519
+                antPt.x    = 0.55;          // Test001 20140519
+                antPt.y    = 0.35;          // Test001 20140519
+                antPt.az   = 0;             // Test001 20140519
+                antPt.state= RIGHT;         // Test002 20140519
+                }
+            // calculate the new position and antenna pointing
+            antPt   = getNewPointing( antPt, 0.001);  // Test001 20140519
+            antennas[1].position    = Vec2(antPt.x,antPt.y) * resolution;
+            antennas[1].azimuth     = antPt.az;
+            antennas[1].gainPattern = defaultAntenna;
+            antennas[1].calculateLoss(screenFill);
+                
+                // Test001 20140519
+                fbo.load();
+                offsetAngles.Load();
+                mIndex = 1;
+                fbo.bindTextureLayer(anglesTextureID, mIndex);
+                mAntPosition.x = antPt.x;
+                mAntPosition.y = antPt.y;
+                mAntPosition.sendTo(offsetAngles);
+                screenFill.draw();
+                fbo.unbindTextureLayer();
+                fbo.unload();
+            
+            
+            rcvrPointing.y  = 0;
+            rcvrPointing.sendTo(summedNoise);  // Test001 20140519
+            screenFill.sendTo(summedNoise);    // Test001 20140519
+            break;
+                
+		case Maximizer:                         // Key 6
+            if(!multAntCase){           // Test001 20140519
+//                setAntMult(antennas, resolution, screenFill);  // Test001
+                antennas[0].position = Vec2(0.25, 0.3583) * resolution;  // Test004 20140519
+                antennas[0].azimuth = M_PI / 2.0;
+                antennas[0].power = 3.0;
+                antennas[0].gainPattern = 0.0;
+                
+                antennas[1].position = Vec2(0.821875, 0.65) * resolution;
+                antennas[1].azimuth = -9.0 * M_PI / 16.0;
+                antennas[1].power = 15.0;
+                antennas[1].gainPattern = 1.0;
+                
+                antennas[2].position = Vec2(0.7125, 0.79583) * resolution;
+                antennas[2].azimuth = - M_PI;
+                antennas[2].power = 15.0;
+                antennas[2].gainPattern = 1.0;
+                
+                antennas[3].position = Vec2(0.49375, 0.3583) * resolution;
+                antennas[3].azimuth = - M_PI/2.0;
+                antennas[3].power = 8.0;
+                antennas[3].gainPattern = 1.0;
+                
+                antennas[0].calculateLoss(screenFill);
+                antennas[1].calculateLoss(screenFill);
+                antennas[2].calculateLoss(screenFill);
+                antennas[3].calculateLoss(screenFill);
 
-		case Maximizer:
-			// draw the B side (to get the A View)
+                multAntCase = true;         // Test001 20140519
+                }
+            // draw the B side (to get the A View)
 			pr_viewB.Load();
 			fbo.load();
 			fbo.bindTextureLayer(viewA_id, 0);
@@ -486,14 +877,10 @@ int main(void)
 			fbo.unbindTextureLayer();
 			fbo.unload();
 			break;
-
-
-                
 		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-        
 
 		time_t now = time(NULL);
 		if (now - start_time >= 5)
