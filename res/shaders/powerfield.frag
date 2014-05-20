@@ -62,7 +62,7 @@ float powerDB(Antenna ant)
 
 	float theta = atan(centerToPointRot.y, centerToPointRot.x);
 	float gain = gain(theta);
-	// float txpower = 12.0;
+	
 	float alpha = (texture(global_alpha, pos_screen / resolution).x * 255.0 / 10.0) + 2.0;
 
 	// gain between 0, 70 (set by gain pattern generator, only assumed here.)
@@ -70,18 +70,17 @@ float powerDB(Antenna ant)
 	// 50.0 is the length of each pixel (50m) 640x480 is 32km by 24km
 	// using log10
 
-	float raySegmentLength = length(50.0 * pos_to_point / 25.0);
-
-	// float powerDB = ant.power + gain - (10.0 * alpha * log10(raySegmentLength));
-    float powerDB = ant.power + gain;
+    float powerDB = ant.power + gain;  // We start with this power and subtract the loss below
 
 	// March a ray through the global_alpha map to approximate non-constant alpha attenuation.
-	for (int i = 1; i < 25; ++i)
+	//for (int i = 1; i < 25; ++i)
+    for (int i = 1; i < 50; ++i)
 	{
 		// The intermediate position (current ray position)is defined as follows:
 		// centerScreen + t * centerToPoint
 		// where t goes from 0.0 to 1.0 in constant intervals
-		vec2 ray = pos_screen + (float(i) / 25.0 * pos_to_point);
+		// vec2 ray = pos_screen + (float(i) / 25.0 * pos_to_point);
+        vec2 ray = pos_screen + (float(i) / 50.0 * pos_to_point);
 		float alpha = (texture(global_alpha, ray/resolution).x * 255.0/ 10.0)+ 2.0;
 
 		powerDB -= 10.0 * alpha * log10(float(i + 1) / float(i));

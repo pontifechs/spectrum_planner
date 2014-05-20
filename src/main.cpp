@@ -85,7 +85,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	case GLFW_KEY_1:
 		if (action == GLFW_PRESS)
 		{
-			*gainPatternLayerPtr = (int)(gainPatternLayerPtr->val + 1) % 4;
+			*gainPatternLayerPtr = (int)(gainPatternLayerPtr->val + 1) % 5;
 			gainPatternLayerPtr->send();
 		}
 		mode = GainPattern;
@@ -137,7 +137,10 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     case GLFW_KEY_M:
         defaultAntenna = 3.0;       // Test003 20140519
         break;
-            
+ 
+    case GLFW_KEY_N:
+        defaultAntenna = 4.0;       // Test003 20140519
+        break;
             
 	case GLFW_KEY_T:
 		if (action == GLFW_PRESS)
@@ -255,13 +258,13 @@ std::vector<Antenna> buildAntennas(Program powerfield,
 	antennas[2].position = Vec2(0.7125, 0.79583) * resolution;
 	antennas[2].azimuth = - M_PI;
 	antennas[2].power = 15.0;
-	antennas[2].gainPattern = 1.0;
+	antennas[2].gainPattern = 2.0;
 
 	antennas[3] = Antenna(powerfield, "antenna", fbo, loss_array, gain_patterns);
 	antennas[3].position = Vec2(0.49375, 0.3583) * resolution;
 	antennas[3].azimuth = - M_PI/2.0;
 	antennas[3].power = 8.0;
-	antennas[3].gainPattern = 1.0;
+	antennas[3].gainPattern = 4.0;
 	
 	antennas[0].calculateLoss(screenFill);
 	antennas[1].calculateLoss(screenFill);     
@@ -346,7 +349,7 @@ nodePoint getNewPointing( nodePoint curr, float delta){
     
     r   = 0.1;
     v   = 0.5;
-    cl  = 0.2;
+    cl  = 0.65;
     cr  = 0.8;
     l   = cr - cl;
     cy  = 0.7;
@@ -609,13 +612,15 @@ int main(void)
 	Image dir60_S(res + "/tex/antenna_60_simple.png");
 	Image dir30_S(res + "/tex/antenna_30_simple.png");
 	Image dir05_S(res + "/tex/antenna_05_simple.png");
+    Image dirSin6x_S(res + "/tex/antenna_sinx.png");
  
 	// Create the gain patterns for the powerField fragment shader
-	UImageArray gain_patterns(powerfield, "gain_patterns", 512, 1, 4);
+	UImageArray gain_patterns(powerfield, "gain_patterns", 512, 1, 5);
 	gain_patterns.setLayer(omni, 0);        
 	gain_patterns.setLayer(dir60_S, 1);     
 	gain_patterns.setLayer(dir30_S, 2);
 	gain_patterns.setLayer(dir05_S, 3);
+    gain_patterns.setLayer(dirSin6x_S, 4);
     
 	gain_patterns.sendTo(powerfield);
 	gain_patterns.sendTo(summedNoise);
