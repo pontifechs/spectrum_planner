@@ -66,7 +66,7 @@ static void error_callback(int error, const char* description)
 	fputs(description, stderr);
 }
 
-float defaultAntenna;   // Test003 20140519
+float defaultAntenna = 0;   // Test003 20140519
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	switch (key)
@@ -85,7 +85,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	case GLFW_KEY_1:
 		if (action == GLFW_PRESS)
 		{
-			*gainPatternLayerPtr = (int)(gainPatternLayerPtr->val + 1) % 5;
+			*gainPatternLayerPtr = (int)(gainPatternLayerPtr->val + 1) % 6;
 			gainPatternLayerPtr->send();
 		}
 		mode = GainPattern;
@@ -114,6 +114,10 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         mode = MovingAnt;   // Test001 20140519
 		// viewAPtr->clearAll(*fboPtr);  // Test001 20140519
 		// viewBPtr->clearAll(*fboPtr);  // Test001 20140519
+            if (action == GLFW_PRESS) {
+                int myVal = floor(defaultAntenna) + 1;
+                defaultAntenna = (float)(  myVal % 6) ;
+            }
 		break;
             
     case GLFW_KEY_6:
@@ -123,23 +127,23 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         break;
 
     case GLFW_KEY_J:
-        defaultAntenna = 0.0;       // Test003 20140519
-        break;
-            
-    case GLFW_KEY_K:
         defaultAntenna = 1.0;       // Test003 20140519
         break;
             
-    case GLFW_KEY_L:
+    case GLFW_KEY_K:
         defaultAntenna = 2.0;       // Test003 20140519
         break;
             
-    case GLFW_KEY_M:
+    case GLFW_KEY_L:
         defaultAntenna = 3.0;       // Test003 20140519
+        break;
+            
+    case GLFW_KEY_M:
+        defaultAntenna = 4.0;       // Test003 20140519
         break;
  
     case GLFW_KEY_N:
-        defaultAntenna = 4.0;       // Test003 20140519
+        defaultAntenna = 5.0;       // Test003 20140519
         break;
             
 	case GLFW_KEY_T:
@@ -245,7 +249,7 @@ std::vector<Antenna> buildAntennas(Program powerfield,
 	antennas[0] = Antenna(powerfield, "antenna", fbo, loss_array, gain_patterns);
 	antennas[0].position = Vec2(0.25, 0.3583) * resolution;
 	antennas[0].azimuth = M_PI / 2.0;
-	antennas[0].power = 3.0;
+	antennas[0].power = 15.0;
 	antennas[0].gainPattern = 0.0;
 	
 	antennas[1] = Antenna(powerfield, "antenna", fbo, loss_array, gain_patterns);
@@ -613,14 +617,16 @@ int main(void)
 	Image dir30_S(res + "/tex/antenna_30_simple.png");
 	Image dir05_S(res + "/tex/antenna_05_simple.png");
     Image dirSin6x_S(res + "/tex/antenna_sinx.png");
+    Image dirHorn_S(res + "/tex/antenna_Horn.png");
  
 	// Create the gain patterns for the powerField fragment shader
-	UImageArray gain_patterns(powerfield, "gain_patterns", 512, 1, 5);
+	UImageArray gain_patterns(powerfield, "gain_patterns", 512, 1, 6);
 	gain_patterns.setLayer(omni, 0);        
 	gain_patterns.setLayer(dir60_S, 1);     
 	gain_patterns.setLayer(dir30_S, 2);
 	gain_patterns.setLayer(dir05_S, 3);
     gain_patterns.setLayer(dirSin6x_S, 4);
+    gain_patterns.setLayer(dirHorn_S, 5);
     
 	gain_patterns.sendTo(powerfield);
 	gain_patterns.sendTo(summedNoise);
